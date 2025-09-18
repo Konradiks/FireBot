@@ -1,0 +1,259 @@
+body {
+    width: 100%;
+    min-height: 100vh;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-self: center;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    position: fixed;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /*padding: 0 4vw 0 6vw;!* max 10*!*/
+    width: 100vw;
+    flex-direction: row;
+    background-color: var(--color13);
+    height: 9vh;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.7);
+    z-index: 100;
+    color: var(--color1);
+}
+
+.center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.logo {
+    width: 200px;
+    /*border-right: 2px solid var(--color16);*/
+    /*border-bottom: 2px solid var(--color16);*/
+}
+
+.logo strong {
+    font-size: 2rem;
+}
+
+.user {
+    width: 230px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-right: 3vw;
+}
+
+.name > p {
+    font-weight: 300;
+    color: var(--color3);
+    margin: 0;
+    padding: 0;
+}
+
+.logout_button {
+	background-color: var(--color12);
+	border-radius: 10px;
+	border: 2px solid var(--color4);
+	display: inline-block;
+	cursor: pointer;
+	color: var(--color1);
+	font-size: 1rem;
+	padding: 7px 17px;
+	text-decoration: none;
+    font-size: 0.75rem;
+}
+
+.logout_button:hover {
+	background-color: var(--dark_red_hover);
+}
+
+.logout_button:active {
+	position: relative;
+	top: 1px;
+}
+
+.container {
+    padding-top: 9vh;
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    background-color: var(--color3);
+}
+
+.container > nav {
+    position: fixed;
+    height: 100%;
+    width: 20vw;
+    background-color: var(--color10);
+    background-color: var(--color10);
+    z-index: 50;
+    box-shadow: 3px 0 10px rgba(0,0,0,0.5);
+    color: var(--color1);
+
+    display: flex;
+    flex-direction: column;
+    /*justify-content: center;*/
+    padding-top: 5rem;
+    /*align-items: center;*/
+
+    /*padding-left: 3vw;*/
+}
+
+.container nav svg {
+    width: 21px;
+    height: 21px;
+}
+
+ul {
+    display: flex;
+    flex-direction: column;
+    justify-content: left;
+    text-decoration: none;
+    list-style: none;
+    gap: 1rem;
+    width: 100%;
+    padding: 0;
+}
+
+ul > li {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    width: 100%;
+    height: 3rem;
+}
+
+ul > li:hover {
+    background-color: var(--color14);
+}
+
+ul > li:active {
+    background-color: var(--color14);
+    position: relative;
+	top: 1px;
+    box-shadow:
+        0 -4px 15px -2px var(--color20),
+        0  4px 15px -2px var(--color20);
+    color: #025b7c;
+
+}
+
+ul > li > a {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    gap: 2rem;
+    padding-left: 3vw;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+    color: var(--color1);
+}
+
+ul > li > a:hover {
+    cursor: pointer;
+}
+ul > li > a:active {
+    color: #025b7c;
+}
+
+main {
+    flex: 1;
+    flex-direction: column;
+    padding: 2rem;
+    display: flex;
+    gap: 1rem;
+    margin-left: 20vw;
+    width: 100%;
+    height: 100%;
+}
+
+.box {
+/*    width: 100%;*/
+    border-radius: 0.5rem;
+    border: 0.12rem solid var(--color10);
+    background-color: var(--color1);
+    padding: 0.7rem 1rem;
+    box-shadow: 0 0 6px rgba(0,0,0,0.3);
+    margin: 0;
+/*    -webkit-box-shadow: 0px 0px 43px 0px rgba(17, 25, 124, 1);*/
+/*    -moz-box-shadow: 0px 0px 43px 0px rgba(17, 25, 124, 1);*/
+/*    box-shadow: 0px 0px 43px 0px rgba(17, 25, 124, 1);*/
+}
+
+.row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1rem;
+    width: 100%;
+    height: 100%;
+}
+
+
+
+.button {
+	background-color: var(--color12);
+	border-radius: 10px;
+	border: 2px solid var(--color3);
+	display: inline-block;
+	cursor: pointer;
+	color: var(--color1);
+	font-size: 1rem;
+	padding: 7px 17px;
+	text-decoration: none;
+}
+
+.button:hover {
+	background-color: var(--color10);
+}
+
+.button:active {
+	position: relative;
+	top: 1px;
+}
+
+input[type=text] {
+    width: 100%;
+    padding: 5px;
+    box-sizing: border-box;
+    border: none;
+    border-bottom: 1px solid var(--color10);
+    background-color: var(--color1);
+    margin-bottom: 1rem;
+}
+
+input[type=text]:focus {
+    box-sizing: border-box;
+    background-color: var(--color3);
+    color: var(--color14);
+    border: 1px solid var(--color10);
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    justify-content: left;
+}
+
+
+@media (max-width: 1000px) {
+    .hide {
+        display: none;
+    }
+
+    .container > nav {
+        width: 67px;
+    }
+
+    header {
+        height: 62px;
+    }
+}

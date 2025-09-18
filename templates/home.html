@@ -1,0 +1,21 @@
+{% extends 'head.html' %}
+{% load static %}
+
+{% block links %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block body %}
+    <h3>Witaj na panelu zarządzania</h3>
+
+    <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+        <h1>FireBot</h1><h3> 'em</h3>
+    </div>
+    <h4>
+        Aby przejść dalej,
+        <strong>zaloguj się</strong>
+    </h4>
+    <a href="/dashboard">Naciśnij</a>
+
+{% endblock %}
