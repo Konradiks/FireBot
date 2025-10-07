@@ -80,6 +80,7 @@ header {
 }
 
 .container {
+    margin: 0;
     padding-top: 9vh;
     display: flex;
     flex-direction: row;
@@ -105,6 +106,7 @@ header {
 
     /*padding-left: 3vw;*/
 }
+
 
 .container nav svg {
     width: 21px;
@@ -162,6 +164,11 @@ ul > li > a:hover {
 }
 ul > li > a:active {
     color: #025b7c;
+}
+
+
+.active_page {
+    background-color: var(--color14);
 }
 
 main {
@@ -241,6 +248,10 @@ form {
     display: flex;
     flex-direction: column;
     justify-content: left;
+}
+
+.shadow {
+    box-shadow: 0 0 15px 0 var(--color16);
 }
 
 

@@ -25,3 +25,7 @@ def setup_view(request):
         return redirect("/")  # po zapisaniu konfiguracji wraca na stronę główną
 
     return render(request, "setup.html")
+
+def logout(request):
+    print("Wylogowano")
+    return redirect("/")

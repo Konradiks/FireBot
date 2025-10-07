@@ -1,6 +1,14 @@
 from django.urls import path
 from . import views
 
+app_name = "dashboard"
+
 urlpatterns = [
-    path('', views.dashboardMain),
+    path('', views.dashboard_Main, name="dashboard"),
+    path('statistics/', views.statistics_page, name="statistics"),
+    path('mode/', views.mode_page, name="mode"),
+    path('blacklist/', views.banned_page, name="blacklist"),
+    path('whitelist/', views.excluded_page, name="whitelist"),
+    path('settings/', views.settings_page, name="settings"),
 ]
+

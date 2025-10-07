@@ -22,5 +22,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.homePage),
     path('dashboard/', include('dashboard.urls')),
+    path('logout/', views.logout, name='logout'),
     # path("setup/", views.setup_view, name="setup"),
 ]
