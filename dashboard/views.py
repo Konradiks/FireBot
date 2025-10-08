@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 
+
 def dashboard_Main(request):
     return redirect('/dashboard/statistics/')
 

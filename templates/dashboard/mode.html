@@ -1,9 +1,25 @@
 {% extends 'dashboard/base.html' %}
 
 {% block content %}
+<div class="row">
+    <div class="box">
+        <h1>Hello from mode page</h1>
+    </div>
 
-<div class="box">
-    <h1>Hello from mode page</h1>
+
+    <div class="box row">
+        <form class="power_off_worker" action="{% url 'power_off' %}" method="post">
+            {% csrf_token %}
+            <button class="logout_button" >Wyłącz bota</button>
+        </form>
+
+        <form class="power_on_worker" action="{% url 'power_on' %}" method="post">
+            {% csrf_token %}
+            <label for="name">worker name:</label>
+            <input type="text" id="name" name="name">
+            <button class="button" >Włącz bota</button>
+        </form>
+    </div>
 </div>
     
 

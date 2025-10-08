@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.conf import settings
 import json
 import os
+from worker.main import FireWorker, worker_instance
 
 def homePage(request):
     return render(request, 'home.html')
@@ -29,3 +30,26 @@ def setup_view(request):
 def logout(request):
     print("Wylogowano")
     return redirect("/")
+
+
+
+def power_off_worker(request):
+    global worker_instance
+    if worker_instance:
+        worker_instance.stop()
+        worker_instance = None
+    return redirect('/dashboard/mode')
+
+def power_on_worker(request):
+    global worker_instance
+    if worker_instance is None:
+        if request.method == "POST":
+            print("hello?")
+            worker_name = request.POST.get("name")
+            print(worker_name)
+            worker_instance = FireWorker(worker_name)
+            worker_instance.run()
+        else:
+            worker_instance = FireWorker()
+            worker_instance.run()
+    return redirect('/dashboard/mode')

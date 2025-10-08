@@ -24,4 +24,6 @@ urlpatterns = [
     path('dashboard/', include('dashboard.urls')),
     path('logout/', views.logout, name='logout'),
     # path("setup/", views.setup_view, name="setup"),
+    path('power_off/', views.power_off_worker, name="power_off"),
+    path('power_on/', views.power_on_worker, name="power_on"),
 ]
