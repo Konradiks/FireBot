@@ -198,7 +198,7 @@ main {
 .row {
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
+    /*flex-wrap: wrap;*/
     gap: 1rem;
 }
 
@@ -225,7 +225,8 @@ main {
 	top: 1px;
 }
 
-input[type=text] {
+input[type=text],
+input[type=number] {
     width: 100%;
     padding: 5px;
     box-sizing: border-box;
@@ -235,7 +236,8 @@ input[type=text] {
     margin-bottom: 1rem;
 }
 
-input[type=text]:focus {
+input[type=text]:focus,
+input[type=number]:focus {
     box-sizing: border-box;
     background-color: var(--color3);
     color: var(--color14);
@@ -246,6 +248,7 @@ form {
     display: flex;
     flex-direction: column;
     justify-content: left;
+    width: 300px;
 }
 
 .shadow {
@@ -265,4 +268,30 @@ form {
     header {
         height: 62px;
     }
+}
+
+.alert {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.alert.success { color: #2ecc71; }
+.alert.error   { color: #e74c3c; }
+.alert.warning { color: #f1c40f; }
+.alert.info    { color: #3498db; }
+
+.ipAdress {
+    display: flex;
+    flex-direction: row; /* już jest, ok */
+    gap: 8px;           /* opcjonalnie: odstęp między polami */
+}
+
+.ipAdress > input[type="text"] {
+    width: 80%;
+    box-sizing: border-box; /* żeby padding/border nie psuły szerokości */
+}
+
+.ipAdress > input[type="number"] {
+    width: 20%;
+    box-sizing: border-box;
 }

@@ -26,4 +26,5 @@ urlpatterns = [
     # path("setup/", views.setup_view, name="setup"),
     path('power_off/', views.power_off_worker, name="power_off"),
     path('power_on/', views.power_on_worker, name="power_on"),
+    path('add-address-to-blacklist/', views.add_address_to_blacklist, name="add-address-to-blacklist"),
 ]

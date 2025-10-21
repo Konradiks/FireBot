@@ -3,8 +3,23 @@
 {% block content %}
 
 <div class="box">
-    <h1>Hello from banned page</h1>
+    <p>Na tej stronie znajdują się adresy ip, które są zablokowane na stałe (bot ich nie odblokuje).<br>
+    Można odblokować je tylko ręcznie wybierając adres z listy.<br>
+    Na tej stronie możesz też na stałe zablokować inny adres.</p>
 </div>
-    
+
+<div class="box">
+    <h2>Wpisz sieć IP do zablokowania</h2>
+    <form method="POST" action="{% url 'add-address-to-blacklist' %}">
+        {% csrf_token %}
+        <div class="ipAdress">
+            <input type="text" placeholder="Adres Ip" name="address" id="address" required>
+            <input type="number" step="1" max="32" min="0" value="32" name="mask">
+        </div>
+        <input type="text" placeholder="Komentarz (opcjonalne)" name="comment">
+        <button class="button">Potwierdz</button>
+    </form>
+</div>
+
 
 {% endblock %}
