@@ -18,6 +18,8 @@ from django.contrib import admin
 from django.urls import path, include
 from . import views
 
+APP_NAME = 'FireBot'
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.homePage),

@@ -100,6 +100,5 @@ def add_address_to_blacklist(request):
         messages.error(request, "Błąd bazy danych – nie udało się zapisać sieci.")
         return redirect("/dashboard/blacklist/")
 
-    messages.success(request, f"Sieć {network} został dodany do czarnej listy.")
     return redirect("/dashboard/blacklist/")
 
