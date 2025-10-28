@@ -8,6 +8,7 @@ from worker.main import FireWorker, worker_instance
 from ipaddress import ip_address, ip_network
 from django.contrib import messages
 from .models import IPLists
+from .functions import *
 
 
 def homePage(request):
@@ -60,45 +61,27 @@ def power_on_worker(request):
             worker_instance.run()
     return redirect('/dashboard/mode')
 
-def add_address_to_blacklist(request):
+def add_address_to_list(request, list_type):
     if request.method != "POST":
         messages.error(request, "Nieobsługiwana metoda (użyj POST).")
-        return redirect("/dashboard/blacklist/")
+        return redirect(f"/dashboard/{list_type}/")
 
     address_str = request.POST.get("address")
-    if not address_str:
-        messages.error(request, "Nie podano adresu IP.")
-        return redirect("/dashboard/blacklist/")
-
     mask_str = request.POST.get("mask")
+    comment = request.POST.get("comment")
 
-    if not mask_str or not (32 >= int(mask_str) >= 0):
-        messages.error(request, "Podano złą maskę sieci")
-        return redirect("/dashboard/blacklist/")
+    network = parse_network(address_str, mask_str, list_type, request)
+    if not network:
+        return redirect(f"/dashboard/{list_type}/")
 
-    network_str = address_str + "/" + mask_str
+    if check_network_exists(network, request, list_type):
+        return redirect(f"/dashboard/{list_type}/")
 
-    try:
-        network = ip_network(network_str)
-    except ValueError:
-        messages.error(request, "Niepoprawny adres IP.")
-        return redirect("/dashboard/blacklist/")
+    create_iplist_entry(list_type, network, comment, request)
+    return redirect(f"/dashboard/{list_type}/")
 
-    if IPLists.objects.filter(network=network).exists():
-        messages.warning(request, f"Sieć {network} już istnieje w bazie.")
-        return redirect("/dashboard/blacklist/")
-
-    add_bl = IPLists()
-    add_bl.network = network
-    add_bl.list_type = 'BLACKLIST'
-    if request.POST.get("comment"):
-        add_bl.comment = request.POST.get("comment")
-    try:
-        add_bl.save()
-        messages.success(request, f"Sieć {network} została dodana do czarnej listy.")
-    except IntegrityError:
-        messages.error(request, "Błąd bazy danych – nie udało się zapisać sieci.")
-        return redirect("/dashboard/blacklist/")
-
-    return redirect("/dashboard/blacklist/")
+def delete_ip(request, list_type, id):
+    ip = IPLists.objects.get(id=id)
+    ip.delete()
+    return redirect(f'/dashboard/{list_type}/')
 

@@ -3,35 +3,40 @@
 {% block content %}
 <div class="row" style="">
     <div class="box">
-        <p>Na tej stronie znajdują się adresy ip, które są zablokowane na stałe (bot ich nie odblokuje).<br>
-        Można odblokować je tylko ręcznie wybierając adres z listy.<br>
-        Na tej stronie możesz też na stałe zablokować inny adres.</p>
+        <p>Na tej stronie znajdują się adresy ip, które nie będą blokowane przez bota.<br>
+        Na tej stronie możesz też na stałe mieć odblokowany adres.</p>
     </div>
 
     <div class="box">
         <h2>Wpisz sieć IP do zablokowania</h2>
-        <form method="POST" action="{% url 'add-address-to-list' 'blacklist' %}">
+        <h4>Podając adres ip i maskę sieci</h4>
+        <form method="POST" action="{% url 'add-address-to-list' 'whitelist' %}" class="network_form">
             {% csrf_token %}
+
             <div class="ipAdress">
                 <input type="text" placeholder="Adres Ip" name="address" id="address" required>
+
                 <input type="number" step="1" max="32" min="0" value="32" name="mask">
+
             </div>
-            <input type="text" placeholder="Komentarz (opcjonalne)" name="comment">
-            <button class="button">Potwierdz</button>
+
+            <input type="text" class="comment_input" placeholder="Komentarz (opcjonalne)" name="comment">
+
+            <button class="button">Dodaj do listy</button>
         </form>
     </div>
 </div>
 
 <div class="box">
-{% if blacklist %}
+{% if whitelist %}
 
-    <h2>Blacklist</h2>
+    <h2>Wlacklist</h2>
     <div class="list">
 {#        <div class="listElement row box">#}
 {#        <strong>Sieć</strong>#}
 {#        <strong>Komentarz</strong>#}
 {#        </div>#}
-        {% for el in blacklist %}
+        {% for el in whitelist %}
 
         <div class="listElement row box">
             <strong>{{ el.network }}</strong>
@@ -42,7 +47,7 @@
             <p> Brak</p>
             {% endif %}
 
-            <form action="{% url 'delete_ip' 'blacklist' el.id %}" method="POST"
+            <form action="{% url 'delete_ip' 'whitelist' el.id %}" method="POST"
                 onsubmit="return confirm('Na pewno chcesz usunąć {{ el.network }}?');">
 
                 {% csrf_token %}

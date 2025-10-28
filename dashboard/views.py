@@ -9,8 +9,9 @@ def blacklist_page(request):
     blacklist = IPLists.objects.filter(list_type="BLACKLIST")
     return render(request, 'dashboard/blacklist.html', {'blacklist': blacklist})
 
-def excluded_page(request):
-    return render(request, 'dashboard/white_list.html')
+def whitelist_page(request):
+    whitelist = IPLists.objects.filter(list_type="WHITELIST")
+    return render(request, 'dashboard/whitelist.html', {'whitelist': whitelist})
 
 def mode_page(request):
     return render(request, 'dashboard/mode.html')
@@ -21,8 +22,5 @@ def settings_page(request):
 def statistics_page(request):
     return render(request, 'dashboard/statistics.html')
 
-def delete_ip(request, id):
-    ip = IPLists.objects.get(id=id)
-    ip.delete()
-    return redirect('/dashboard/blacklist/')
+
 

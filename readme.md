@@ -1,5 +1,9 @@
 # to do
-- Config file
+- Config file - to do przemyślenia
 - testy czasu dostępu dla pobrania wartości z configu a z classy
-- zrobić white i black list ( zrobić klasy, endpointy i może dorobić coś pod workera
-- Informacja o tym czy dany adres jest na whitelist jeśli chcemy go wpisać na black list
+- dodać aby worker sprawdzał blacklist (w celu odblokowania adresu) i whitelist (w celu)
+- zrobić setting 
+  - Ilość prób nieudanych logowań w celu zablokowania
+  - Czy blokować adresy permamentnie 
+  - 
+    
