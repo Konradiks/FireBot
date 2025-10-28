@@ -22,9 +22,10 @@ APP_NAME = 'FireBot'
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.homePage),
+    path('login', views.login_view, name='login'),
+    path('', views.homePage, name='home'),
     path('dashboard/', include('dashboard.urls')),
-    path('logout/', views.logout, name='logout'),
+    path('logout/', views.logout_view, name='logout'),
     # path("setup/", views.setup_view, name="setup"),
     path('power_off/', views.power_off_worker, name="power_off"),
     path('power_on/', views.power_on_worker, name="power_on"),

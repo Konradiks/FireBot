@@ -5,5 +5,7 @@
 - zrobić setting 
   - Ilość prób nieudanych logowań w celu zablokowania
   - Czy blokować adresy permamentnie 
+  - Długość 1, 2, 3 blokady, (4 permamentna)
+  - Jaki ma być czas aby zresetować pamięć ostatnich prób nieudanych logowań
   - 
     

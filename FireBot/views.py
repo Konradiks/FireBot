@@ -1,3 +1,5 @@
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm
 from django.http import HttpResponseBadRequest
 from django.shortcuts import render, redirect
 from django.conf import settings
@@ -9,10 +11,30 @@ from ipaddress import ip_address, ip_network
 from django.contrib import messages
 from .models import IPLists
 from .functions import *
+from django.contrib.auth import login, logout
 
 
 def homePage(request):
-    return render(request, 'home.html')
+    return redirect('login')
+
+def login_view(request):
+    if request.method == "POST":
+        form = AuthenticationForm(data=request.POST)
+        if form.is_valid():
+            login(request, form.get_user())
+            if "next" in request.POST:
+                return redirect(request.POST.get("next"))
+            else:
+                return redirect("dashboard:dashboard")
+    else:
+        form = AuthenticationForm()
+
+    return render(request, 'login.html', { "form": form })
+
+def logout_view(request):
+    if request.method == "POST":
+        logout(request)
+        return redirect("login")
 
 def setup_view(request):
     config_path = os.path.join(settings.BASE_DIR, "config.json")
@@ -30,16 +52,11 @@ def setup_view(request):
         with open(config_path, "w") as f:
             json.dump(config, f)
 
-        return redirect("/")  # po zapisaniu konfiguracji wraca na stronę główną
+        return redirect("/")
 
     return render(request, "setup.html")
 
-def logout(request):
-    print("Wylogowano")
-    return redirect("/")
-
-
-
+@login_required
 def power_off_worker(request):
     global worker_instance
     if worker_instance:
@@ -47,6 +64,7 @@ def power_off_worker(request):
         worker_instance = None
     return redirect('/dashboard/mode')
 
+@login_required
 def power_on_worker(request):
     global worker_instance
     if worker_instance is None:
@@ -61,6 +79,7 @@ def power_on_worker(request):
             worker_instance.run()
     return redirect('/dashboard/mode')
 
+@login_required
 def add_address_to_list(request, list_type):
     if request.method != "POST":
         messages.error(request, "Nieobsługiwana metoda (użyj POST).")
@@ -80,8 +99,11 @@ def add_address_to_list(request, list_type):
     create_iplist_entry(list_type, network, comment, request)
     return redirect(f"/dashboard/{list_type}/")
 
+@login_required
 def delete_ip(request, list_type, id):
     ip = IPLists.objects.get(id=id)
     ip.delete()
     return redirect(f'/dashboard/{list_type}/')
+
+
 
