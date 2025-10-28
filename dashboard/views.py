@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from FireBot.models import IPLists
 from django.contrib.auth.decorators import login_required
+from . import forms
 
 
 @login_required
@@ -23,10 +24,12 @@ def mode_page(request):
 
 @login_required
 def settings_page(request):
-    return render(request, 'dashboard/settings.html')
+    form = forms.SettingsForm()
+    return render(request, 'dashboard/settings.html', {'form': form})
 
 @login_required
 def statistics_page(request):
+
     return render(request, 'dashboard/statistics.html')
 
 
