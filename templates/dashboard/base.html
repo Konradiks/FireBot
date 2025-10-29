@@ -20,7 +20,13 @@
     <div class="user center">
         <div class="name">
             <p>Zalogowany jako</p>
-            <strong>User01</strong>
+            <strong>
+                {% if request.user.is_authenticated %}
+                    {{ request.user.username }}
+                {% else %}
+                    <p>Nie jesteś zalogowany.</p>
+                {% endif %}
+            </strong>
         </div>
         <form class="logot" action="{% url 'logout' %}" method="post">
             {% csrf_token %}
