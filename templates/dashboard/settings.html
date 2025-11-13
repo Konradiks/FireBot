@@ -1,17 +1,38 @@
 {% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block links %}
+        <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+        <link rel="stylesheet" href="{% static 'css/dashboardBase.css' %}">
+        <link rel="stylesheet" href="{% static 'css/settings.css' %}">
+
+{% endblock %}
 
 {% block content %}
 
-<div class="box">
-    <h1>Hello from settings page</h1>
-<div class="box">
-    <form>
-        {% csrf_token %}
-        {{ form }}
-        <button class="button">button</button>
-    </form>
-</div>
-</div>
+    <div class="box shadow">
+        <h2>Ustawienia FireBota</h2>
+
+        <form method="POST" class="settings-form">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small class="help-text">{{ field.help_text }}</small>
+                    {% endif %}
+
+                </div>
+            {% endfor %}
+
+            <button type="submit" class="button save-button">Zapisz ustawienia</button>
+        </form>
+    </div>
+
     
 
 {% endblock %}

@@ -3,9 +3,9 @@
 {% block content %}
 <div class="row" style="">
     <div class="box">
-        <p>Na tej stronie znajdują się adresy ip, które są zablokowane na stałe (bot ich nie odblokuje).<br>
-        Można odblokować je tylko ręcznie wybierając adres z listy.<br>
-        Na tej stronie możesz też na stałe zablokować inny adres.</p>
+        <p>Na tej stronie znajdują się adresy IP, które są na stałe zablokowane — bot nigdy ich automatycznie nie odblokuje.
+Odblokowanie adresu możliwe jest tylko ręcznie, poprzez wybranie go z listy.
+Możesz tu także na stałe zablokować nowe adresy IP.</p>
     </div>
 
     <div class="box">
@@ -21,6 +21,10 @@
         </form>
     </div>
 </div>
+
+    <div class="box">
+        <h2>Aktualnie zablokowane adresy</h2>
+    </div>
 
 <div class="box">
 {% if blacklist %}
@@ -59,6 +63,8 @@
     <h2>Lista jest pusta</h2>
 {% endif %}
 </div>
+
+
 
 
 {% endblock %}

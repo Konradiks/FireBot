@@ -19,7 +19,7 @@ class FireWorker(threading.Thread):
 
         while self.interrupt != True:
             ip = ipaddress.IPv4Address(random.randint(0, 2 ** 32 - 1))
-            print(f"{self.getName()} - Zablokowano adres: {ip}")
+            print(f"Zablokowano adres: {ip}")
             time.sleep(1)
 
     def stop(self):

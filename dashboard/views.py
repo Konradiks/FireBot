@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from FireBot.models import IPLists
 from django.contrib.auth.decorators import login_required
 from . import forms
+from worker import main as worker_module
+from worker.main import FireWorker
 
 
 @login_required
@@ -20,8 +22,8 @@ def whitelist_page(request):
 
 @login_required
 def mode_page(request):
-    return render(request, 'dashboard/mode.html')
-
+    bot_active = worker_module.worker_instance is not None
+    return render(request, 'dashboard/mode.html', {'bot_active': bot_active})
 @login_required
 def settings_page(request):
     form = forms.SettingsForm()

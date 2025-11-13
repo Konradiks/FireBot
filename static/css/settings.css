@@ -1,0 +1,94 @@
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* --- GRUPY POL --- */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.form-group label {
+    font-weight: 700;
+    color: var(--color9);
+    font-size: 1rem;
+}
+
+/* --- POLA INPUT --- */
+.settings-form input[type="text"],
+.settings-form input[type="number"],
+.settings-form input[type="time"],
+.settings-form input[type="duration"],
+.settings-form input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--color4);
+    border-radius: 6px;
+    background-color: var(--color2);
+    color: var(--color9);
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.settings-form input[type="text"]:focus,
+.settings-form input[type="number"]:focus,
+.settings-form input[type="duration"]:focus {
+    outline: none;
+    border: 1px solid var(--color10);
+    background-color: var(--color1);
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+}
+
+.form-group input[type="checkbox"] + label {
+    font-weight: 600;
+    color: var(--color8);
+}
+
+/* --- TEKSTY POMOCNICZE --- */
+.help-text {
+    font-size: 0.85rem;
+    color: var(--color6);
+}
+
+.error-text {
+    font-size: 0.85rem;
+    color: #e74c3c;
+    font-weight: 600;
+}
+
+/* --- PRZYCISK --- */
+.save-button {
+    background-color: var(--color12);
+    border: 2px solid var(--color10);
+    border-radius: 8px;
+    color: var(--color1);
+    font-weight: 700;
+    padding: 10px 20px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    align-self: flex-end;
+    cursor: pointer;
+}
+
+.save-button:hover {
+    background-color: var(--dark_red_hover);
+    border-color: var(--dark_red);
+}
+
+.save-button:active {
+    transform: scale(0.98);
+}
+
+/* --- RESPONSYWNOŚĆ --- */
+@media (max-width: 600px) {
+    .settings-box {
+        padding: 1.5rem;
+    }
+    .save-button {
+        width: 100%;
+        align-self: center;
+    }
+}

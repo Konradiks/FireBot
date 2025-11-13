@@ -1,17 +1,19 @@
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import AuthenticationForm
+# from django.contrib.auth.forms import AuthenticationForm
 from django.http import HttpResponseBadRequest
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.db import IntegrityError
 import json
 import os
-from worker.main import FireWorker, worker_instance
+from worker import main as worker_module
+from worker.main import FireWorker
 from ipaddress import ip_address, ip_network
 from django.contrib import messages
 from .models import IPLists
 from .functions import *
 from django.contrib.auth import login, logout
+from .forms import CustomLoginForm
 
 
 def homePage(request):
@@ -19,7 +21,7 @@ def homePage(request):
 
 def login_view(request):
     if request.method == "POST":
-        form = AuthenticationForm(data=request.POST)
+        form = CustomLoginForm(data=request.POST)
         if form.is_valid():
             login(request, form.get_user())
             if "next" in request.POST:
@@ -27,7 +29,7 @@ def login_view(request):
             else:
                 return redirect("dashboard:dashboard")
     else:
-        form = AuthenticationForm()
+        form = CustomLoginForm()
 
     return render(request, 'login.html', { "form": form })
 
@@ -58,25 +60,26 @@ def setup_view(request):
 
 @login_required
 def power_off_worker(request):
-    global worker_instance
-    if worker_instance:
-        worker_instance.stop()
-        worker_instance = None
+    if worker_module.worker_instance:
+        worker_module.worker_instance.stop()
+        worker_module.worker_instance = None
+        print("Worker stopped")
+    else:
+        print("No worker instance to stop")
     return redirect('/dashboard/mode')
 
 @login_required
 def power_on_worker(request):
-    global worker_instance
-    if worker_instance is None:
+    if worker_module.worker_instance is None:
         if request.method == "POST":
-            print("hello?")
             worker_name = request.POST.get("name")
-            print(worker_name)
-            worker_instance = FireWorker(worker_name)
-            worker_instance.run()
+            worker_module.worker_instance = FireWorker(worker_name)
         else:
-            worker_instance = FireWorker()
-            worker_instance.run()
+            worker_module.worker_instance = FireWorker()
+        worker_module.worker_instance.start()
+        print("Worker started")
+    else:
+        print("Worker already running")
     return redirect('/dashboard/mode')
 
 @login_required

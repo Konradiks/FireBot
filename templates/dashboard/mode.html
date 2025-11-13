@@ -2,21 +2,24 @@
 
 {% block content %}
 <div class="row">
-
-    <div class="box row">
-        <form class="power_off_worker" action="{% url 'power_off' %}" method="post">
-            {% csrf_token %}
-            <button class="logout_button" >Wyłącz bota</button>
-        </form>
-
-        <form class="power_on_worker" action="{% url 'power_on' %}" method="post">
-            {% csrf_token %}
-            <label for="name">worker name:</label>
-            <input type="text" id="name" name="name">
-            <button class="button" >Włącz bota</button>
-        </form>
+    <div class="box row" style="text-align:center; padding:20px;">
+        {% if bot_active %}
+            <h2 style="color:green;">Bot w trybie automatycznym</h2>
+            <form class="row" action="{% url 'power_off_worker' %}" method="post">
+                {% csrf_token %}
+                <button class="button" style="background:red; color:white; padding:10px 20px; font-size:16px;">
+                    Wyłącz bota
+                </button>
+            </form>
+        {% else %}
+            <h2 style="color:red;">Bot nie działa</h2>
+            <form class="row"  action="{% url 'power_on_worker' %}" method="post">
+                {% csrf_token %}
+                <button class="button" style="background:green; color:white; padding:10px 20px; font-size:16px; margin-left:10px;">
+                    Włącz tryb automatyczny
+                </button>
+            </form>
+        {% endif %}
     </div>
 </div>
-    
-
 {% endblock %}

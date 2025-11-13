@@ -4,28 +4,37 @@
 {% block links %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/home.css' %}">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
 {% endblock %}
 
 {% block body %}
-    <h3>Witaj na panelu zarządzania</h3>
+<div class="login-container center">
+    <div class="login-box shadow">
+        <div class="login-header">
+            <h3 class="lato-light">Witaj w panelu zarządzania</h3>
 
-    <div style="display: flex; align-items: baseline; gap: 0.5rem;">
-        <h1>FireBot</h1><h3> 'em</h3>
+            <div class="logo">
+                <h1 class="lato-black">FireBot</h1>
+                <h3 class="lato-regular">'em</h3>
+            </div>
+
+            <h4 class="lato-regular">
+                Aby przejść dalej, <strong>zaloguj się</strong>
+            </h4>
+        </div>
+
+        <form class="login-form" action="/login" method="POST">
+            {% csrf_token %}
+            {{ form }}
+
+            {% if request.GET.next %}
+                <input type="hidden" name="next" value="{{ request.GET.next }}">
+            {% endif %}
+
+            <button class="button">Zaloguj się</button>
+        </form>
     </div>
+</div>
 
-    <h4>
-        Aby przejść dalej,
-        <strong>zaloguj się</strong>
-    </h4>
-
-
-    <form class="login-form" action="/login" method="POST">
-        {% csrf_token %}
-        {{ form }}
-        {% if request.GET.next %}
-            <input type="hidden" name="next" value="{{ request.GET.next }}">
-        {% endif %}
-        <button class="button">Zaloguj się</button>
-    </form>
 
 {% endblock %}

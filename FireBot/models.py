@@ -14,3 +14,8 @@ class IPLists(models.Model):
 
     def __str__(self):
         return f"{self.network} ({self.list_type})"
+
+class ThreatLog(models.Model):
+    IP_TYPE_CHOICES = [
+        ('WHITELIST', 'Whitelist'),
+    ]
