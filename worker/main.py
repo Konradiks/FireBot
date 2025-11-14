@@ -65,7 +65,7 @@ class ActionExecutor(BaseWorker):
 
 class LogAnalyzer(BaseWorker):
     def __init__(self):
-        super().__init__("LogAnalyzer")
+        super().__init__(name="LogAnalyzer")
 
     def loop(self):
         print(f"[{self.name}] Found issue!")
@@ -74,7 +74,7 @@ class LogAnalyzer(BaseWorker):
 
 class LogFetcher(BaseWorker):
     def __init__(self):
-        super().__init__("LogFetcher")
+        super().__init__(name="LogFetcher")
 
     def loop(self):
         log = f"LOG at {time.time()}"
