@@ -7,7 +7,7 @@ from django.db import IntegrityError
 import json
 import os
 from worker import main as worker_module
-from worker.main import FireWorker
+from worker.main import FireWorker, ActionExecutor
 from ipaddress import ip_address, ip_network
 from django.contrib import messages
 from .models import IPLists
@@ -17,7 +17,10 @@ from .forms import CustomLoginForm
 
 
 def homePage(request):
-    return redirect('login')
+    if request.user.is_authenticated:
+        return redirect('dashboard:dashboard')
+    else:
+        return redirect('login')
 
 def login_view(request):
     if request.method == "POST":
@@ -72,8 +75,7 @@ def power_off_worker(request):
 def power_on_worker(request):
     if worker_module.worker_instance is None:
         if request.method == "POST":
-            worker_name = request.POST.get("name")
-            worker_module.worker_instance = FireWorker(worker_name)
+            worker_module.worker_instance = ActionExecutor()
         else:
             worker_module.worker_instance = FireWorker()
         worker_module.worker_instance.start()
