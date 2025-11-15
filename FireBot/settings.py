@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'dashboard',
     'FireBot',
-    # 'worker.apps.WorkerConfig', # Workers
+    'worker.apps.WorkerConfig', # Workers
 
 ]
 

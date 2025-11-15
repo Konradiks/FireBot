@@ -3,7 +3,6 @@ from FireBot.models import IPLists
 from django.contrib.auth.decorators import login_required
 from . import forms
 from worker import classes as worker_module
-from worker.classes import FireWorker
 from .models import Settings
 from django.contrib import messages
 

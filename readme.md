@@ -17,6 +17,7 @@
 - Przetwarzanie streamu udp i zapis danych do bazy
 - Analizowanie danych w bazie i dodawanie adresów do listy do zbanowania
 - przemyślenie struktury bazy danych
+- sprawdzanie czy coś jest w settings jeśli nie to cos trzeba wymyśleć
 
 # Done
 - Config file - to do przemyślenia

@@ -23,7 +23,7 @@ while True:
     if mess == 'exit':
         UDPServer.close()
         break
-    time.sleep(1)
+    # time.sleep(1)
 
 print("SERVER SHUTDOWN")
 

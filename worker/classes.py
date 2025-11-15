@@ -7,30 +7,18 @@ import ipaddress
 from tkinter.font import names
 import datetime
 
+
+from worker.functions import save_log, get_raw_log, parse_raw_log
+
 worker_instance = None
 
-class FireWorker(threading.Thread):
+debug = True
 
-    def __init__(self, name="None"):
-        super().__init__()
-        self.interrupt = False
-        self.name = name
-
-    def run(self):
-        print("Starting...")
-        self.interrupt = False
-
-        while self.interrupt != True:
-            ip = ipaddress.IPv4Address(random.randint(0, 2 ** 32 - 1))
-            print(f"{datetime.datetime.now()} Zablokowano adres: {ip}")
-            time.sleep(1)
-
-    def stop(self):
-        print("Stopping...")
-        self.interrupt = True
-
-    def getName(self):
-        return self.name
+########################################################################################################################
+#########                                                                                                      #########
+#########                                      BaseWorker                                                      #########
+#########                                                                                                      #########
+########################################################################################################################
 
 
 class BaseWorker(threading.Thread):
@@ -57,30 +45,51 @@ class BaseWorker(threading.Thread):
     def getName(self):
         return self.name
 
+########################################################################################################################
+#########                                                                                                      #########
+#########                                      ActionExecutor                                                  #########
+#########                                                                                                      #########
+########################################################################################################################
+
+
 class ActionExecutor(BaseWorker):
-    def __init__(self, input_queue=None):
-        super().__init__(name='ActionExecutor')
-        self.input_queue = input_queue
+    def __init__(self, name=None):
+        if name is None:
+            name = "ActionExecutor"
+        super().__init__(name=name)
 
     def loop(self):
         ip = ipaddress.IPv4Address(random.randint(0, 2 ** 32 - 1))
         print(f"{datetime.datetime.now()} Zablokowano adres: {ip}")
         time.sleep(1)
 
+########################################################################################################################
+#########                                                                                                      #########
+#########                                      LogAnalyzer                                                     #########
+#########                                                                                                      #########
+########################################################################################################################
+
 class LogAnalyzer(BaseWorker):
-    def __init__(self):
-        super().__init__(name="LogAnalyzer")
+    def __init__(self, name=None):
+        if name is None:
+            name = "LogAnalyzer"
+        super().__init__(name=name)
 
     def loop(self):
-        print(f"[{self.name}] Found issue!")
-        time.sleep(3)
+        print(f"[{self.name}] Not Yet Implemented")
+        time.sleep(30)
 
+########################################################################################################################
+#########                                                                                                      #########
+#########                                      LogFetche                                                       #########
+#########                                                                                                      #########
+########################################################################################################################
 
 class LogFetcher(BaseWorker):
     def __init__(self, ip:ipaddress.IPv4Address=None, port:int=None):
         super().__init__(name="LogFetcher")
-        self.ip = None
-        self.port = None
+        self.ip = ip
+        self.port = port
         self.UDPServer = None
         self.buffer = 4096
 
@@ -104,10 +113,15 @@ class LogFetcher(BaseWorker):
                 print(f"[{self.name}] Invalid port value: {port}")
 
     def open_udp_server(self):
+        if self.UDPServer:
+            print(f"[{self.name}] UDPServer już otwarty.")
+            return
         if self.ip and self.port:
             try:
                 self.UDPServer = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                self.UDPServer.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 self.UDPServer.bind((self.ip, self.port))
+                print(f"[{self.name}] UDPServer open to {self.ip}:{self.port}")
             except socket.error as e:
                 print(f"[{self.name}] Failed to bind: {e}")
         else:
@@ -115,15 +129,33 @@ class LogFetcher(BaseWorker):
 
 
     def loop(self):
-        pass
+        raw_data, addr = self.UDPServer.recvfrom(self.buffer)
+        if debug:
+            print(f"[{self.name}] Received data from %s:%d" % (addr[0], addr[1]), end=" ")
+            mess = raw_data.decode().strip()
+            print("Message: '" + mess + "'") # For debugging
+        try:
+            raw_log = get_raw_log(raw_data)
 
-        # data, addr = self.UDPServer.recvfrom(self.buffer)
-        # print("Received data from %s:%d" % (addr[0], addr[1]), end=" ")
-        # mess = data.decode().strip()
-        # print(data)
-        # print("Message: '" + mess + '"')
-        # print(type(data.decode()))
-        # time.sleep(1)
+            try:
+                log = parse_raw_log(raw_log)
+                print("log: " + str(log))
+
+                try:
+                    log.save()
+                    if debug:
+                        print(f"[{self.name}] Log saved.")
+                except Exception as e:
+                    print(f"[{self.name}] Failed to save log: {e}")
+
+            except Exception as e:
+                print(f"[{self.name}] Failed to parse log: {e}")
+
+        except ValueError:
+            print(f"[{self.name}] Invalid data received: {raw_data}")
+
+
+
 
 
 if __name__ == '__main__':
