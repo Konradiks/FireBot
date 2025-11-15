@@ -77,7 +77,7 @@ class LogAnalyzer(BaseWorker):
 
 
 class LogFetcher(BaseWorker):
-    def __init__(self):
+    def __init__(self, ip:ipaddress.IPv4Address=None, port:int=None):
         super().__init__(name="LogFetcher")
         self.ip = None
         self.port = None
@@ -104,19 +104,26 @@ class LogFetcher(BaseWorker):
                 print(f"[{self.name}] Invalid port value: {port}")
 
     def open_udp_server(self):
-        if self.ip is not None and self.port is not None:
-            self.UDPServer = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self.UDPServer.bind((self.ip, self.port))
+        if self.ip and self.port:
+            try:
+                self.UDPServer = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                self.UDPServer.bind((self.ip, self.port))
+            except socket.error as e:
+                print(f"[{self.name}] Failed to bind: {e}")
+        else:
+            print(f"[{self.name}] No IP and/or Port specified")
 
 
     def loop(self):
-        data, addr = self.UDPServer.recvfrom(self.buffer)
-        print("Received data from %s:%d" % (addr[0], addr[1]), end=" ")
-        mess = data.decode().strip()
-        print(data)
-        print("Message: '" + mess + '"')
-        print(type(data.decode()))
-        time.sleep(1)
+        pass
+
+        # data, addr = self.UDPServer.recvfrom(self.buffer)
+        # print("Received data from %s:%d" % (addr[0], addr[1]), end=" ")
+        # mess = data.decode().strip()
+        # print(data)
+        # print("Message: '" + mess + '"')
+        # print(type(data.decode()))
+        # time.sleep(1)
 
 
 if __name__ == '__main__':

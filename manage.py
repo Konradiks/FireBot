@@ -2,14 +2,14 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
-from worker.main import LogFetcher, LogAnalyzer
+from worker.classes import LogFetcher, LogAnalyzer
 
 
 def main():
-    w1 = LogAnalyzer()
-    w2 = LogFetcher()
-    w1.start()
-    w2.start()
+    # w1 = LogAnalyzer()
+    # w2 = LogFetcher()
+    # w1.start()
+    # w2.start()
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'FireBot.settings')
     try:
