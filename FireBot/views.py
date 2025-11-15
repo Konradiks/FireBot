@@ -6,8 +6,8 @@ from django.conf import settings
 from django.db import IntegrityError
 import json
 import os
-from worker import main as worker_module
-from worker.main import FireWorker, ActionExecutor
+from worker import classes as worker_module
+from worker.classes import FireWorker, ActionExecutor
 from ipaddress import ip_address, ip_network
 from django.contrib import messages
 from .models import IPLists

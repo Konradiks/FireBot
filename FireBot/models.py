@@ -16,6 +16,120 @@ class IPLists(models.Model):
         return f"{self.network} ({self.list_type})"
 
 class ThreatLog(models.Model):
-    IP_TYPE_CHOICES = [
-        ('WHITELIST', 'Whitelist'),
-    ]
+    """
+    Model reprezentujący pojedynczy wpis logu THREAT z Palo Alto (PAN-OS).
+    Zapisane są tylko dane w polach numer:
+        6 	- Generated Time
+        7 	- Source Address
+        11 	- Rule Name
+        14 	- Application
+        23 	- Repeat Count
+        8 	- Destination Address
+        25 	- Destination Port
+        28 	- Flags
+        32 	- Threat ID
+        38 	- Source Location
+        69 	- Threat Category
+        73 	- Payload Protocol ID
+    """
+
+    generated_time = models.DateTimeField(
+        db_index=True,
+        help_text="Czas wygenerowania logu przez firewall (Generated Time)"
+    )
+
+    source_address = models.GenericIPAddressField(
+        db_index=True,
+        help_text="Adres IP źródła (Source Address)"
+    )
+
+    rule_name = models.CharField(
+        max_length=128,
+        db_index=True,
+        help_text="Nazwa reguły, która dopasowała ruch (Rule Name)"
+    )
+
+    application = models.CharField(
+        max_length=128,
+        help_text="Zidentyfikowana aplikacja (Application)"
+    )
+
+    repeat_count = models.PositiveIntegerField(
+        default=1,
+        help_text="Liczba powtórzeń zdarzenia w krótkim czasie (Repeat Count)"
+    )
+
+    destination_address = models.GenericIPAddressField(
+        db_index=True,
+        help_text="Adres IP źródła (Destination Address)"
+    )
+
+    destination_port = models.PositiveIntegerField(
+        db_index=True,
+        help_text="Port docelowy (Destination Port)"
+    )
+
+    flags = models.CharField(
+        max_length=64,
+        blank=True,
+        null=True,
+        help_text="Flagi sesji TCP (Flags)"
+    )
+
+    threat_id = models.CharField(
+        max_length=512,
+        db_index=True,
+        help_text="Identyfikator zagrożenia lub sygnatury, opis (Threat ID)"
+    )
+
+    source_location = models.CharField(
+        max_length=128,
+        blank=True,
+        null=True,
+        help_text="Lokalizacja geograficzna źródła (Source Location)"
+    )
+
+    threat_category = models.CharField(
+        max_length=128,
+        blank=True,
+        null=True,
+        db_index=True,
+        help_text="Kategoria zagrożenia (Threat Category)"
+    )
+
+    payload_protocol_id = models.CharField(
+        max_length=32,
+        blank=True,
+        null=True,
+        help_text="Identyfikator protokołu w ładunku (Payload Protocol ID)"
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="Czas dodania logu do bazy danych"
+    )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["source_address", "generated_time"]),
+            models.Index(fields=["application", "destination_port"]),
+            models.Index(fields=["threat_category"]),
+        ]
+        verbose_name = "Threat Log"
+        verbose_name_plural = "Threat Logs"
+        ordering = ["-generated_time"]
+
+    def __str__(self):
+        return f"{self.generated_time} | {self.source_address} → {self.destination_port} | {self.threat_id}"
+
+''' Tabela do zablokowanych adresów musi mieć
+- adres na jaki blokada jest nałożona
+- czas rozpoczęcia blokady
+- dlugosc blokany (chyba numer)
+- czas zdjecia blokady
+
+Tabela 2 podejrzane adresy
+adres
+ostatni atak
+liczba atakow
+'''
