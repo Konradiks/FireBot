@@ -14,7 +14,7 @@
     <div class="box shadow">
         <h2>Ustawienia FireBota</h2>
 
-        <form method="POST" class="settings-form">
+        <form method="POST" class="settings-form" onsubmit="return confirm('Zapisanie ustawien spowoduje zresetowanie workerów. Czy napewno zapisać ustawienia?');">
             {% csrf_token %}
             {{ form.non_field_errors }}
 
@@ -29,7 +29,7 @@
                 </div>
             {% endfor %}
 
-            <button type="submit" class="button save-button">Zapisz ustawienia</button>
+            <button type="submit" class="button save-button" >Zapisz ustawienia</button>
         </form>
     </div>
 {% endblock %}

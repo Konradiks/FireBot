@@ -1,3 +1,5 @@
+from idlelib.debugger_r import wrap_info
+
 from django.shortcuts import render, redirect
 from FireBot.models import IPLists
 from django.contrib.auth.decorators import login_required
@@ -5,6 +7,7 @@ from . import forms
 from worker import classes as worker_module
 from .models import Settings
 from django.contrib import messages
+from django.apps import apps
 
 @login_required
 def dashboard_Main(request):
@@ -37,9 +40,22 @@ def settings_page(request):
     if request.method == "POST":
         form = forms.SettingsForm2(request.POST)
         if form.is_valid():
+            log_ip = form.cleaned_data.get("log_server_ip")
+            log_port = form.cleaned_data.get("log_server_port")
+            reset_attempts_time = form.cleaned_data.get("reset_attempts_time")
+            sleep_time = form.cleaned_data.get("bot_frequency")
             Settings.objects.all().delete()
-            form.save()
-            messages.success(request, 'Settings saved.')
+            try:
+                form.save()
+                messages.success(request, 'Settings saved.')
+            except Exception as e:
+                messages.error(request, e)
+                return redirect('/dashboard/settings/')
+
+            worker_config = apps.get_app_config('worker')
+            worker_config.log_fetcher_restart(ip=log_ip, port=log_port)
+            worker_config.log_analyzer_restart(sleep_time=sleep_time,reset_attempts_time=reset_attempts_time)
+
             return redirect('/dashboard/settings/')
 
     if request.method == "GET":

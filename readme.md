@@ -6,7 +6,8 @@
 - Wyświetlanie statystyk
 - Wypisanie komendy do wklejenia dla operatora
 - Konteneryzacja
-- Obsługa streamu logów
+
+
 - Dane do statystyk
   - ilość ataków od godziny (wykres)
   - ilość zablokowanych adresów
@@ -14,16 +15,21 @@
   - najczeście zablokowany ades
   - najczęsciej atakujący kraj
   - najczęsciej atakowany adres
-- Przetwarzanie streamu udp i zapis danych do bazy
+
+
+
 - Analizowanie danych w bazie i dodawanie adresów do listy do zbanowania
-- przemyślenie struktury bazy danych
 - sprawdzanie czy coś jest w settings jeśli nie to cos trzeba wymyśleć
 
 # Done
 - Config file - to do przemyślenia
 - testy czasu dostępu dla pobrania wartości z configu a z classy
-- - zrobić setting 
-  - Ilość prób nieudanych logowań w celu zablokowania
-  - Czy blokować adresy permamentnie 
-  - Długość 1, 2, 3 blokady, (4 permamentna)
-  - Jaki ma być czas aby zresetować pamięć ostatnich prób nieudanych logowań
+- zrobić setting 
+- Ilość prób nieudanych logowań w celu zablokowania
+- Czy blokować adresy permamentnie 
+- Długość 1, 2, 3 blokady, (4 permamentna)
+- Jaki ma być czas aby zresetować pamięć ostatnich prób nieudanych logowań
+- Obsługa streamu logów
+- Przetwarzanie streamu udp i zapis danych do bazy
+- przemyślenie struktury bazy danych
+- dodać aby serwer udp resetował się po zmianie adresu/portu i dodać komuniakt na stronie w help ze to spowoduje reset

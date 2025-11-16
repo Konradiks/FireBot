@@ -77,7 +77,7 @@ def power_on_worker(request):
         if request.method == "POST":
             worker_module.worker_instance = ActionExecutor()
         else:
-            worker_module.worker_instance = FireWorker()
+            worker_module.worker_instance = ActionExecutor()
         worker_module.worker_instance.start()
         print("Worker started")
     else:

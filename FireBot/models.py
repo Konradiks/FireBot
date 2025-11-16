@@ -109,11 +109,18 @@ class ThreatLog(models.Model):
         help_text="Czas dodania logu do bazy danych"
     )
 
+    processed = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text="Czy ten log został już przetworzony przez background worker"
+    )
+
     class Meta:
         indexes = [
             models.Index(fields=["source_address", "generated_time"]),
             models.Index(fields=["application", "destination_port"]),
             models.Index(fields=["threat_category"]),
+            models.Index(fields=["processed"]),
         ]
         verbose_name = "Threat Log"
         verbose_name_plural = "Threat Logs"
@@ -122,14 +129,38 @@ class ThreatLog(models.Model):
     def __str__(self):
         return f"{self.generated_time} | {self.source_address} → {self.destination_port} | {self.threat_id}"
 
+class FailedLoginSummary(models.Model):
+    source_address = models.GenericIPAddressField(db_index=True)
+    last_attempt = models.DateTimeField()
+    attempts_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    processed = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text="Czy ten log został już przetworzony przez background worker"
+    )
+
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["source_address", "last_attempt"]),
+            models.Index(fields=["processed"]),
+        ]
+
+    def __str__(self):
+        return f"{self.source_address} | {self.attempts_count} attempts"
+
 ''' Tabela do zablokowanych adresów musi mieć
 - adres na jaki blokada jest nałożona
 - czas rozpoczęcia blokady
 - dlugosc blokany (chyba numer)
 - czas zdjecia blokady
+- czy do odblokowania?
 
 Tabela 2 podejrzane adresy
 adres
 ostatni atak
 liczba atakow
+
+tabela logów dodać wpis czy był już przetwarzany
 '''
