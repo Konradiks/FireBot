@@ -8,7 +8,7 @@ from FireBot.models import BlockedAddress
 def gen_panos_securityrules_block(host: str, ip_list: list, vsys: str = "vsys1", api_key: str="<YOUR-API-KEY>"):
     '''
     Generate a single curl command that creates multiple deny rules in one request.
-
+    https://pan.dev/scm/api/config/ngfw/security/create-security-rules/
     Args:
         host: firewall IP/hostname
         api_key: PAN-OS API key
@@ -39,7 +39,7 @@ def gen_panos_securityrules_block(host: str, ip_list: list, vsys: str = "vsys1",
 
     url = f"{host}/restapi/v11.0/Policies/SecurityRules?location=vsys&vsys={vsys}&name=FireBot-batch"
 
-    # Generacja curl w formacie CMD z \ i +
+
     cmd_command = "curl -k -X POST \\\n"
     cmd_command += "  '" + url + "' \\\n"
     cmd_command += "  -H 'X-PAN-KEY: " + api_key + "' \\\n"
@@ -50,7 +50,7 @@ def gen_panos_securityrules_block(host: str, ip_list: list, vsys: str = "vsys1",
 
 
 def get_command_html(command):
-    # Zamieniamy komendę na poprawnie escapowany string JS
+
     escaped_command = json.dumps(str(command))
 
     return f"""
@@ -70,7 +70,7 @@ def get_command_html(command):
             <div id="apiSection">
                 <label>Wpisz klucz API:</label><br>
                 <input id="apiInput" type="text" placeholder="API key" style="width:300px; padding:5px;">
-                <button onclick="updateApiKey()">Zapisz klucz</button>
+                <button onclick="updateApiKey()">Uzupełnij klucz</button>
             </div>
         </div>
 

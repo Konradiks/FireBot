@@ -166,40 +166,25 @@ class ActionExecutor(BaseWorker):
         if not to_unblock:
             return
 
+        for entry in to_unblock:
 
+            if is_ip_on_list(entry.address, "Blacklist"): # If true skip
+                if self.debug:
+                    print(f"[{self.name}] Address {entry.address} on Blacklist → skipping")
+                entry.processed = True
+                entry.requires_unblock = False
+                entry.save(update_fields=["processed", "requires_unblock"])
+                continue
 
-        # for blockade in to_unblock:
-        #     print(blockade)
-        #     if is_ip_on_list(blockade.address, "Blacklist"):
-        #         if self.debug:
-        #             print(f"[{self.name}] Address {blockade.address} on whitelist → skipping")
-        #         blockade.processed = True
-        #         blockade.save(update_fields=["processed"])
-
-
-        if self.automated:
-            print(f"API Call not implemented")
-            for entry in to_unblock:
-                if is_ip_on_list(entry.address, "Blacklist"):
-                    if self.debug:
-                        print(f"[{self.name}] Address {entry.address} on Blacklist → skipping")
-                    entry.address.processed = True
-                    entry.address.save(update_fields=["processed"])
-                    continue
+            if self.automated:
+                print(f"API Call not implemented")
+                # update DB
                 entry.is_blocked = False
                 entry.was_unblocked = True
                 entry.requires_unblock = False
                 entry.processed = True
                 entry.save(update_fields=["is_blocked", "was_unblocked", "requires_unblock", "processed"])
-
-        else:
-            for entry in to_unblock:
-                if is_ip_on_list(entry.address, "Blacklist"):
-                    if self.debug:
-                        print(f"[{self.name}] Address {entry.address} on Blacklist → skipping")
-                    entry.address.processed = True
-                    entry.address.save(update_fields=["processed"])
-                    continue
+            else:
                 entry.requires_unblock = True
                 entry.processed = True
                 entry.save(update_fields=["requires_unblock", "processed"])
