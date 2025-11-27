@@ -133,6 +133,7 @@ class FailedLoginSummary(models.Model):
     source_address = models.GenericIPAddressField(db_index=True)
     last_attempt = models.DateTimeField()
     attempts_count = models.PositiveIntegerField(default=0)
+    attempts_count_total = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     processed = models.BooleanField(
         default=False,

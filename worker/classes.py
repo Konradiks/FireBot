@@ -10,7 +10,7 @@ from worker.functions import save_log, get_raw_log, parse_raw_log, is_ip_on_list
 
 worker_instance = None
 
-debug = False
+debug = True
 simulate = False
 
 
@@ -266,9 +266,16 @@ class ActionExecutor(BaseWorker):
             else:
                 if debug:
                     print(f'[{self.name}] {threat} was not yet Blocked.')
-                threat.processed = True
-                threat.save(update_fields=["processed"])
-                continue
+                threat_blockade.start_time = now
+                if threat_blockade.block_number == 1:
+                    threat_blockade.end_time = now + self.block_duration_1
+                if threat_blockade.block_number == 2:
+                    threat_blockade.end_time = now + self.block_duration_2
+                if threat_blockade.block_number == 3:
+                    threat_blockade.end_time = now + self.block_duration_3
+
+                threat_blockade.processed = True
+                threat_blockade.save(update_fields=["end_time", "start_time" ])
 
             if not created and threat_blockade.was_unblocked:
                 # podbij poziom blokady
@@ -370,15 +377,14 @@ class LogAnalyzer(BaseWorker):
                         )
                         continue
                 if now - summary.last_attempt > reset_delta:
-
                     summary.attempts_count = total_attempts
+                    summary.attempts_count_total += total_attempts
+
                 else:
-
                     summary.attempts_count += total_attempts
-
+                    summary.attempts_count_total += total_attempts
 
                 if summary.last_attempt < last_generated_time:
-
                     summary.last_attempt = last_generated_time
 
             summary.processed = False

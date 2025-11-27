@@ -40,9 +40,7 @@
 </div>
 
     <div class="box">
-        {% if block_list == None %}
-            <h3>Brak aktualnie blokowanych adresów</h3>
-        {% elif block_list %}
+        {% if block_list %}
             <h2>Aktualnie blokowane adresy:</h2>
             <div class="list">
                 {% for el in block_list %}
@@ -59,6 +57,8 @@
 
                 {% endfor %}
             </div>
+        {% else %}
+            <h3>Brak aktualnie blokowanych adresów</h3>
         {% endif %}
     </div>
 
