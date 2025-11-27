@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.shortcuts import redirect
 from django.db import IntegrityError
 from .models import IPLists
+import json
 
 def parse_network(address_str, mask_str, list_type, request):
     if not address_str:
@@ -49,3 +50,16 @@ def create_iplist_entry(list_type, network, comment, request):
         return None
 
     return add_bl
+
+def get_settings():
+    from dashboard.models import Settings
+    settings = Settings.objects.first()
+    if not settings:
+        # Jeśli nie ma rekordu, stworzymy domyślny
+        settings = Settings.objects.create()
+    return settings
+
+def get_firewall_address():
+    set = get_settings()
+    if set:
+        return set.firewall_address

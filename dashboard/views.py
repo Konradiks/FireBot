@@ -1,13 +1,25 @@
-from idlelib.debugger_r import wrap_info
+import json
 
-from django.shortcuts import render, redirect
-from FireBot.models import IPLists
+from django.http import HttpResponse
+from django.shortcuts import redirect
+
+from FireBot.functions import get_firewall_address
+from FireBot.models import IPLists, BlockedAddress
 from django.contrib.auth.decorators import login_required
 from . import forms
-from worker import classes as worker_module
 from .models import Settings
 from django.contrib import messages
 from django.apps import apps
+from django.db.models import Sum
+from FireBot.models import ThreatLog
+from django.utils import timezone
+from datetime import timedelta
+from django.shortcuts import render
+
+from .functions import (gen_panos_securityrules_block, get_command_html, db_mark_block_ip_addresses,
+                        db_mark_unblock_ip_addresses, gen_panos_securityrules_unblock)
+
+debug = True
 
 @login_required
 def dashboard_Main(request):
@@ -16,7 +28,21 @@ def dashboard_Main(request):
 @login_required
 def blacklist_page(request):
     blacklist = IPLists.objects.filter(list_type="BLACKLIST")
-    return render(request, 'dashboard/blacklist.html', {'blacklist': blacklist})
+    block_list = BlockedAddress.objects.filter(
+        is_blocked=True
+    ).order_by('block_number')
+
+    return render(request, 'dashboard/blacklist.html', {'blacklist': blacklist, 'block_list': block_list})
+
+
+@login_required
+def blocked_view(request):
+    block_list = BlockedAddress.objects.filter(
+        is_blocked=True
+    ).order_by('block_number')
+    return render(request, 'dashboard/blocked.html', {'block_list': block_list})
+@login_required
+
 
 @login_required
 def whitelist_page(request):
@@ -25,8 +51,71 @@ def whitelist_page(request):
 
 @login_required
 def mode_page(request):
-    bot_active = worker_module.worker_instance is not None
-    return render(request, 'dashboard/mode.html', {'bot_active': bot_active})
+    if request.method == "POST":
+        selected_addresses = request.POST.getlist('addresses')
+        # selected_addresses to lista adresów wybranych przez użytkownika
+        print(selected_addresses)
+        # dalej możesz je np. zablokować w bazie
+
+    settings = Settings.objects.first()
+    automated = settings.executor_automated
+    if automated is False:
+        to_block_list = BlockedAddress.objects.filter(
+            was_unblocked=False,
+            end_time__gte=timezone.localtime(),
+            is_blocked=False
+        )
+        to_unblock_list = BlockedAddress.objects.filter(
+            is_blocked=True,
+            end_time__lte=timezone.localtime(),
+            was_unblocked=False,
+            requires_unblock=True
+        )
+
+    else:
+        to_block_list = None
+        to_unblock_list = None
+    return render(request, 'dashboard/mode.html', {
+        'automated': automated,
+        "to_block_list": to_block_list,
+        "to_unblock_list": to_unblock_list,
+        })
+
+@login_required
+def gen_block_command(request):
+    if request.method == "POST":
+        # Pobieramy wszystkie adresy z formularza
+        selected_addresses = request.POST.getlist('addresses')
+
+        if selected_addresses:
+            if debug:
+                print("Blokuję wszystkie:", selected_addresses)
+            db_mark_block_ip_addresses(selected_addresses)
+            command = gen_panos_securityrules_block(host=get_firewall_address(), ip_list=selected_addresses)
+
+            return HttpResponse(get_command_html(command))
+
+    return redirect('/dashboard/mode/')
+
+@login_required
+def gen_unblock_command(request):
+    if request.method == "POST":
+        # Pobieramy wszystkie adresy z formularza
+        selected_addresses = request.POST.getlist('addresses')
+
+        if selected_addresses:
+            if debug:
+                print("Odblokuję wszystkie:", selected_addresses)
+
+            db_mark_unblock_ip_addresses(selected_addresses)
+            command = gen_panos_securityrules_unblock(host=get_firewall_address(), ip_list=selected_addresses)
+
+            return HttpResponse(get_command_html(command))
+
+        return redirect('/dashboard/mode/')
+
+    return redirect('/dashboard/mode/')
+
 @login_required
 def settings_page(request):
     # Pobierz pierwszy rekord lub utwórz domyślny
@@ -51,10 +140,11 @@ def settings_page(request):
             except Exception as e:
                 messages.error(request, e)
                 return redirect('/dashboard/settings/')
-
+            # WORKERS RESTART
             worker_config = apps.get_app_config('worker')
             worker_config.log_fetcher_restart(ip=log_ip, port=log_port)
             worker_config.log_analyzer_restart(sleep_time=sleep_time,reset_attempts_time=reset_attempts_time)
+            worker_config.action_executor_restart()
 
             return redirect('/dashboard/settings/')
 
@@ -64,8 +154,83 @@ def settings_page(request):
 
 @login_required
 def statistics_page(request):
+    # GET params: start_date, end_date (ISO: YYYY-MM-DD), granularity: hour|day
+    from django.http import HttpResponse
+    import json
+    from django.db.models.functions import TruncHour, TruncDay
 
-    return render(request, 'dashboard/statistics.html')
+    # Defaults: last 24 hours
+    try:
+        end_date = request.GET.get('end_date')
+        start_date = request.GET.get('start_date')
+        granularity = request.GET.get('granularity', 'hour')
 
+        if end_date:
+            # parse date-only string to timezone-aware datetime at end of day
+            end_dt = timezone.make_aware(timezone.datetime.fromisoformat(end_date))
+        else:
+            end_dt = timezone.localtime()
 
+        if start_date:
+            start_dt = timezone.make_aware(timezone.datetime.fromisoformat(start_date))
+        else:
+            # default to 24 hours before end_dt
+            start_dt = end_dt - timedelta(hours=24)
+    except Exception:
+        # fallback to last 24 hours
+        end_dt = timezone.localtime()
+        start_dt = end_dt - timedelta(hours=24)
+        granularity = 'hour'
+
+    qs = ThreatLog.objects.filter(generated_time__gte=start_dt, generated_time__lte=end_dt)
+
+    # Time series aggregation
+    if granularity == 'day':
+        ts = qs.annotate(period=TruncDay('generated_time')).values('period').annotate(count=Sum('repeat_count')).order_by('period')
+    else:
+        ts = qs.annotate(period=TruncHour('generated_time')).values('period').annotate(count=Sum('repeat_count')).order_by('period')
+
+    x_time = [t['period'].isoformat() for t in ts]
+    y_counts = [t['count'] for t in ts]
+
+    # Additional metrics
+    total_attempts = int(sum(y_counts)) if y_counts else 0
+    unique_sources = qs.values('source_address').distinct().count()
+    if y_counts:
+        peak_count = int(max(y_counts))
+        peak_time = x_time[y_counts.index(max(y_counts))]
+    else:
+        peak_count = 0
+        peak_time = None
+
+    # Pie: threat category distribution
+    categories = qs.values('threat_category').annotate(count=Sum('repeat_count')).order_by('-count')
+    pie = {c['threat_category'] or 'unknown': c['count'] for c in categories}
+
+    # Top sources, destination ports, rules, countries
+    top_sources = list(qs.values('source_address').annotate(count=Sum('repeat_count')).order_by('-count')[:10])
+    top_ports = list(qs.values('destination_port').annotate(count=Sum('repeat_count')).order_by('-count')[:10])
+    top_rules = list(qs.values('rule_name').annotate(count=Sum('repeat_count')).order_by('-count')[:10])
+    top_countries = list(qs.values('source_location').annotate(count=Sum('repeat_count')).order_by('-count')[:10])
+    top_dest = list(qs.values('destination_address').annotate(count=Sum('repeat_count')).order_by('-count')[:10])
+
+    context = {
+        'x_time_json': json.dumps(x_time),
+        'y_time_json': json.dumps(y_counts),
+        'pie_json': json.dumps(pie),
+        'top_sources_json': json.dumps([{ 'source': s['source_address'], 'count': s['count']} for s in top_sources]),
+        'top_ports_json': json.dumps([{ 'port': p['destination_port'], 'count': p['count']} for p in top_ports]),
+        'top_rules_json': json.dumps([{ 'rule': r['rule_name'], 'count': r['count']} for r in top_rules]),
+    'top_countries_json': json.dumps([{ 'country': c['source_location'] or 'unknown', 'count': c['count']} for c in top_countries]),
+    'top_dest_json': json.dumps([{ 'destination': d['destination_address'], 'count': d['count']} for d in top_dest]),
+        'start_date': start_dt.date().isoformat(),
+        'end_date': end_dt.date().isoformat(),
+        'granularity': granularity,
+        'total_attempts': total_attempts,
+        'unique_sources': unique_sources,
+        'peak_count': peak_count,
+        'peak_time': peak_time,
+    }
+
+    return render(request, "dashboard/statistics.html", context)
 

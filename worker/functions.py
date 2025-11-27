@@ -1,10 +1,13 @@
+import ipaddress
 from datetime import datetime
 from io import StringIO
 import csv
-
+from FireBot.models import IPLists
+from django.utils import timezone
 
 
 debug = False
+debug2 = False
 
 def block_ip_address(address, time):
     return f"Zablokowano"
@@ -32,7 +35,7 @@ def get_raw_log(raw_data):
     raw_logs = csv.reader(StringIO(str(data)))
     raw_log = next(raw_logs)
     try:
-        if raw_log[3] == "THREAT":
+        if raw_log[3] == "THREAT": # or raw_log[3] == "TRAFFIC":
             return raw_log
     except IndexError:
         if debug == True:
@@ -51,10 +54,19 @@ def parse_raw_log(raw_log: list[str]):
     try:
         # Sprawdź, czy to jest log typu THREAT
         if raw_log[3] != "THREAT":
+            if debug == True:
+                print("[parse_raw_log] Not the THREAT log")
             return None
+
+        # if raw_log[69] != 'brute-force':
+        #     if debug == True:
+        #         print("[parse_raw_log] Not the brute-force log")
+        #     return None
             # Tworzymy instancję modelu
+        naive_dt = datetime.strptime(raw_log[6], "%Y/%m/%d %H:%M:%S")
+
         log = ThreatLog.objects.create(
-            generated_time=datetime.strptime(raw_log[6], "%Y/%m/%d %H:%M:%S"),
+            generated_time=timezone.make_aware(naive_dt, timezone.get_current_timezone()),
             source_address=raw_log[7],
             destination_address=raw_log[8],
             rule_name=raw_log[11],
@@ -73,3 +85,17 @@ def parse_raw_log(raw_log: list[str]):
         # Niepełny lub niepoprawny wiersz CSV
         print(f"[parse_raw_log] Invalid raw log: {e}")
         return None
+
+def is_ip_on_list(ip, list_type):
+    """
+    :param ip:
+    :param list_type: 'Whitelist' or 'Blacklist'
+    :return:
+    """
+    ip = ipaddress.ip_address(ip)
+    network_list: IPLists = IPLists.objects.filter(list_type=list_type.upper())
+    for el in network_list:
+        network = ipaddress.ip_network(el.network)
+        if ip in network:
+            return True
+    return False

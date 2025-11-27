@@ -1,16 +1,8 @@
 from django.contrib.auth.decorators import login_required
-# from django.contrib.auth.forms import AuthenticationForm
-from django.http import HttpResponseBadRequest
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.conf import settings
-from django.db import IntegrityError
 import json
 import os
-from worker import classes as worker_module
-from worker.classes import ActionExecutor
-from ipaddress import ip_address, ip_network
-from django.contrib import messages
-from .models import IPLists
 from .functions import *
 from django.contrib.auth import login, logout
 from .forms import CustomLoginForm
@@ -63,25 +55,26 @@ def setup_view(request):
 
 @login_required
 def power_off_worker(request):
-    if worker_module.worker_instance:
-        worker_module.worker_instance.stop()
-        worker_module.worker_instance = None
-        print("Worker stopped")
-    else:
-        print("No worker instance to stop")
+    # if worker_module.worker_instance:
+    #     worker_module.worker_instance.stop()
+    #     worker_module.worker_instance = None
+    #     print("Worker stopped")
+    # else:
+    #     print("No worker instance to stop")
     return redirect('/dashboard/mode')
 
 @login_required
 def power_on_worker(request):
-    if worker_module.worker_instance is None:
-        if request.method == "POST":
-            worker_module.worker_instance = ActionExecutor()
-        else:
-            worker_module.worker_instance = ActionExecutor()
-        worker_module.worker_instance.start()
-        print("Worker started")
-    else:
-        print("Worker already running")
+    # if worker_module.worker_instance is None:
+    #     settings: Settings = get_settings()
+    #     if request.method == "POST":
+    #         worker_module.worker_instance = ActionExecutor(unblock_ip_interval=datetime.timedelta(seconds=30), failed_attempts_limit = settings.failed_attempts_limit)
+    #     else:
+    #         worker_module.worker_instance = ActionExecutor(unblock_ip_interval=datetime.timedelta(seconds=30), failed_attempts_limit = settings.failed_attempts_limit)
+    #     worker_module.worker_instance.start()
+    #     print("Worker started")
+    # else:
+    #     print("Worker already running")
     return redirect('/dashboard/mode')
 
 @login_required

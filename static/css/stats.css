@@ -1,0 +1,107 @@
+.settings-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1rem;
+    flex-direction: row;
+    background-color: var(--color2);
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.settings-form .form-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 200px;
+}
+
+.settings-form label {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--color9);
+    margin-bottom: 0.3rem;
+}
+
+.settings-form input[type="date"],
+.settings-form select {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--color4);
+    background-color: var(--color1);
+    font-size: 0.95rem;
+    color: var(--color9);
+    transition: all 0.2s ease;
+}
+
+.settings-form input[type="date"]:focus,
+.settings-form select:focus {
+    outline: none;
+    border: 1px solid var(--color10);
+    background-color: var(--color3);
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+}
+
+.settings-form .save-button {
+    align-self: flex-end;
+    padding: 8px 20px;
+    border-radius: 8px;
+    border: 2px solid var(--color10);
+    background-color: var(--color12);
+    color: var(--color1);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    height: 40px;
+    width: 100px;
+}
+
+.settings-form .save-button:hover {
+    background-color: var(--color14);
+    border-color: var(--color13);
+}
+
+/*.graphs {*/
+/*    width: 90%;*/
+/*    padding: 50px;*/
+/*}*/
+
+.graphs {
+    display:flex;
+    gap: 20px;
+    flex-wrap:wrap;
+    margin-top:10px;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.graph {
+    flex:1;
+    width:500px;
+    max-width: 45%;
+    margin-top: 10px;
+}
+
+#linechart svg{
+    height: 520px;
+
+}
+/*#linechart rect {*/
+/*    height: 520px;*/
+/*    width: 70%;*/
+/*    margin: 0;*/
+/*}*/
+
+/*.linechart rect {*/
+/*    height: 520px;*/
+/*    width: 70%;*/
+/*}*/
+
+@media (max-width: 600px) {
+    .settings-form {
+        flex-direction: column;
+    }
+    .settings-form .save-button {
+        width: 100%;
+        align-self: center;
+    }
+}

@@ -7,5 +7,6 @@ class CustomLoginForm(AuthenticationForm):
         label="Nazwa użytkownika"
     )
     password = forms.CharField(
-        label="Hasło"
+        label="Hasło",
+        widget=forms.PasswordInput()
     )

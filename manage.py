@@ -2,7 +2,7 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
-from worker.classes import LogFetcher, LogAnalyzer
+
 
 
 def main():

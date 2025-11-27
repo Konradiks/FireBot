@@ -1,0 +1,27 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+
+ <div class="box">
+        {% if block_list == None %}
+            <h3>Brak aktualnie blokowanych adresów</h3>
+        {% elif block_list %}
+            <h2>Aktualnie blokowane adresy:</h2>
+            <div class="list">
+                {% for el in block_list %}
+
+                        <form action="{% url 'dashboard:blacklist' %}" method="POST" class="listElement row box center"
+                              onsubmit="return confirm('Na pewno chcesz odblokować {{ el.address }}?');">
+                            <button type="submit" class="logout_button">Odblokuj</button>
+                            <p>{{ el }}</p>
+                            {% csrf_token %}
+
+                        </form>
+
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    
+
+{% endblock %}

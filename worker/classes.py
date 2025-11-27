@@ -1,20 +1,18 @@
-import queue
-import random
 import socket
 import threading
 import time
 import ipaddress
-from tkinter.font import names
 import datetime
+from django.utils import timezone
 
-
-
-from worker.functions import save_log, get_raw_log, parse_raw_log
+from FireBot.models import FailedLoginSummary, BlockedAddress
+from worker.functions import save_log, get_raw_log, parse_raw_log, is_ip_on_list
 
 worker_instance = None
 
-debug = True
-simulate = True
+debug = False
+simulate = False
+
 
 ########################################################################################################################
 #########                                                                                                      #########
@@ -56,15 +54,243 @@ class BaseWorker(threading.Thread):
 
 
 class ActionExecutor(BaseWorker):
-    def __init__(self, name=None):
+    def __init__(
+            self,
+            unblock_ip_interval,
+            failed_attempts_limit,
+            block_duration_1,
+            block_duration_2,
+            block_duration_3,
+            block_4_permanently,
+            block_period_reset_time,
+            automated,
+            whitelist,
+            name=None,
+            sleep_time=datetime.timedelta(minutes=1)
+    ):
         if name is None:
             name = "ActionExecutor"
+
         super().__init__(name=name)
 
+        # -------------------------
+        # CONFIG
+        # -------------------------
+        self.unblock_ip_interval = unblock_ip_interval  # co ile odblokowywać IP
+        self.failed_attempts_limit = failed_attempts_limit  # próg failed attempts
+        self.sleep_time = sleep_time.total_seconds()
+        self.whitelist = whitelist
+
+        # Czas kolejnego odblokowania
+        self.next_unblock_time = timezone.localtime()
+
+        # Okna blokad
+        self.block_duration_1 = block_duration_1
+        self.block_duration_2 = block_duration_2
+        self.block_duration_3 = block_duration_3
+        self.block_4_permanently = block_4_permanently  # blokada 4 = permanentna?
+
+        # Reset poziomu blokady po X czasie
+        self.block_period_reset_time = block_period_reset_time
+
+        # Tryb działania blokera
+        self.automated = automated  # jeśli True → automatyczne API
+        print(f"[{self.name} Started in automated mode: {self.automated}]")
+        self.debug = True  # logging
+
+    # ----------------------------------------------------------------------
+    # PODNIESIENIE POZIOMU BLOKADY
+    # ----------------------------------------------------------------------
+
+    def increase_blockade(self, threat_blockade: BlockedAddress, now):
+        """
+        Zwiększa poziom blokady lub resetuje, jeśli minęło 30 dni.
+        """
+        threat_blockade.start_time = now
+
+        # jeśli end_time jest None (nowy rekord), resetujemy poziom
+        if threat_blockade.end_time is None:
+            threat_blockade.block_number = 1
+            threat_blockade.end_time = now + self.block_duration_1
+
+        # jeśli ostatnia blokada nie jest przedawniona → podbij poziom
+        elif threat_blockade.end_time + self.block_period_reset_time > now:
+
+
+            if threat_blockade.block_number == 1:
+                threat_blockade.block_number = 2
+                threat_blockade.end_time = now + self.block_duration_2
+                threat_blockade.requires_unblock = True
+
+            elif threat_blockade.block_number == 2:
+                threat_blockade.block_number = 3
+                threat_blockade.end_time = now + self.block_duration_3
+                threat_blockade.requires_unblock = True
+
+            elif threat_blockade.block_number == 3:
+                if self.block_4_permanently:
+                    threat_blockade.block_number = 4
+                    threat_blockade.requires_unblock = False
+                    # Możesz tu dodać wpis do blacklist
+                else:
+                    threat_blockade.requires_unblock = True
+                    threat_blockade.block_number = 3
+                threat_blockade.end_time = now + self.block_duration_3
+
+        # jeśli blokada się przedawniła → reset do poziomu 1
+        else:
+            threat_blockade.block_number = 1
+            threat_blockade.end_time = now + self.block_duration_1
+
+        # ustaw flagi blokady
+        threat_blockade.is_blocked = False
+        threat_blockade.was_unblocked = False
+        threat_blockade.processed = False
+
+        return threat_blockade
+
+        # ----------------------------------------------------------------------
+        # ODBLOKOWANIE ADRESÓW
+        # ----------------------------------------------------------------------
+
+    def unblock_expired(self, now):
+        """
+        Zdejmuje blokady, których czas minął.
+        """
+        to_unblock = BlockedAddress.objects.filter(
+            is_blocked=True,
+            end_time__lte=now,
+            processed=False
+        )
+
+        if not to_unblock:
+            return
+
+
+
+        # for blockade in to_unblock:
+        #     print(blockade)
+        #     if is_ip_on_list(blockade.address, "Blacklist"):
+        #         if self.debug:
+        #             print(f"[{self.name}] Address {blockade.address} on whitelist → skipping")
+        #         blockade.processed = True
+        #         blockade.save(update_fields=["processed"])
+
+
+        if self.automated:
+            print(f"API Call not implemented")
+            for entry in to_unblock:
+                if is_ip_on_list(entry.address, "Blacklist"):
+                    if self.debug:
+                        print(f"[{self.name}] Address {entry.address} on Blacklist → skipping")
+                    entry.address.processed = True
+                    entry.address.save(update_fields=["processed"])
+                    continue
+                entry.is_blocked = False
+                entry.was_unblocked = True
+                entry.requires_unblock = False
+                entry.processed = True
+                entry.save(update_fields=["is_blocked", "was_unblocked", "requires_unblock", "processed"])
+
+        else:
+            for entry in to_unblock:
+                if is_ip_on_list(entry.address, "Blacklist"):
+                    if self.debug:
+                        print(f"[{self.name}] Address {entry.address} on Blacklist → skipping")
+                    entry.address.processed = True
+                    entry.address.save(update_fields=["processed"])
+                    continue
+                entry.requires_unblock = True
+                entry.processed = True
+                entry.save(update_fields=["requires_unblock", "processed"])
+
+
     def loop(self):
-        ip = ipaddress.IPv4Address(random.randint(0, 2 ** 32 - 1))
-        print(f"{datetime.datetime.now()} Zablokowano adres: {ip}")
-        time.sleep(1)
+        now = timezone.localtime()
+
+        # ==========================================================
+        # 1. ODBLOKOWANIE ADRESÓW (raz na zdefiniowany okres)
+        # ==========================================================
+        if now >= self.next_unblock_time:
+            self.unblock_expired(now)
+            self.next_unblock_time = now + self.unblock_ip_interval
+            # nie return — chcemy też od razu blokować nowe
+            print(f"[{self.name}] Next unblock scheduled at {self.next_unblock_time}")
+
+        # ==========================================================
+        # 2. BLOKOWANIE ADRESÓW
+        # ==========================================================
+
+        if debug:
+            print(f'[{self.name}] Checking if the number of new failed login attempts has exceeded the limits')
+
+        # pobierz adresy z nadmiarową liczbą prób
+        threat_ip_list = FailedLoginSummary.objects.filter(
+            attempts_count__gt=self.failed_attempts_limit,
+            processed=False,
+
+        )
+        if not threat_ip_list:
+            time.sleep(self.sleep_time)
+            return
+
+        for threat in threat_ip_list:
+            if debug:
+                print(f"[{self.name}] Analyzing Threat: {threat}")
+
+            # jeśli adres na whitelist → pomijamy
+            if is_ip_on_list(threat.source_address, "Whitelist"):
+                if self.debug:
+                    print(f"[{self.name}] Address {threat.source_address} on whitelist → skipping")
+                threat.processed = True
+                threat.save(update_fields=["processed"])
+                continue
+
+            # Pobierz lub utwórz wpis blokady
+            threat_blockade, created = BlockedAddress.objects.get_or_create(
+                address=threat.source_address,
+                defaults={
+                    "start_time": now,
+                    "block_number": 1,
+                    "end_time": now + self.block_duration_1,
+                    "is_blocked": False,
+                    "requires_unblock": True,
+                    "was_unblocked": False,
+                    "created_at": now,
+                    "processed": False,
+                }
+            )
+
+            if threat_blockade.was_unblocked != False or True != threat_blockade.requires_unblock:
+                pass
+            else:
+                if debug:
+                    print(f'[{self.name}] {threat} was not yet Blocked.')
+                threat.processed = True
+                threat.save(update_fields=["processed"])
+                continue
+
+            if not created and threat_blockade.was_unblocked:
+                # podbij poziom blokady
+                threat_blockade = self.increase_blockade(threat_blockade, now)
+                if debug:
+                    print(f'{self.name} increased blockade for {threat.source_address} ')
+
+            # TRYB AUTOMATYCZNY
+            if self.automated:
+                print(f"[{self.name}] Automatic API call → NOT IMPLEMENTED YET")
+
+            # zapis blokady
+            threat_blockade.save()
+
+            # oznacz źródło jako przetworzone i zresetuj licznik
+            threat.processed = True
+            threat.attempts_count = 0
+            threat.save(update_fields=["processed", "attempts_count"])
+
+            # pauza przed kolejną iteracją
+        time.sleep(self.sleep_time)
+
 
 ########################################################################################################################
 #########                                                                                                      #########
@@ -86,22 +312,19 @@ class LogAnalyzer(BaseWorker):
         #     self.reset_time = datetime.timedelta(days=1)
 
     def loop(self):
-        print(f"[{self.name}] Checking for new brute-force logs...")
+        if debug:
+            print(f"[{self.name}] Checking for new brute-force logs...")
 
         from FireBot.models import ThreatLog, FailedLoginSummary
         from django.utils import timezone
-        import datetime
         # Pobierz nowe logi brute-force
 
         reset_delta = self.reset_attempts_time
 
-        now = timezone.now()
+        now = timezone.localtime()
         if simulate:
             now = timezone.make_aware(datetime.datetime(2025, 11, 8, 12, 22, 44))
 
-        # print("now", now)
-        # print(self.reset_attempts_time)
-        # print(self.sleep_time)
 
         logs = (ThreatLog.objects.filter(
             processed=False,
@@ -111,7 +334,8 @@ class LogAnalyzer(BaseWorker):
         # print("logs", logs)
 
         if not logs:
-            print(f"[{self.name}] No logs found.")
+            if debug:
+                print(f"[{self.name}] No logs found.")
             time.sleep(self.sleep_time)
             return
 
@@ -124,100 +348,51 @@ class LogAnalyzer(BaseWorker):
 
         # Przetwarzanie logów dla każdego IP
         for ip, ip_logs in logs_by_ip.items():
-            # last_generated_time = max(log.generated_time for log in ip_logs)
-            # total_attempts = sum(log.repeat_count for log in ip_logs)
 
+            summary: FailedLoginSummary = None
             for log in ip_logs:
-                print(f"[{self.name}] Processing {log}, for ip {ip}")
+                if debug:
+                    print(f"[{self.name}] Processing {log}, for ip {ip}")
                 last_generated_time = log.generated_time
                 total_attempts = log.repeat_count
 
-                try:
-                    summary = FailedLoginSummary.objects.get(source_address=ip)
-                    print(now - summary.last_attempt, end=" ___ ")
-                    print(reset_delta)
-                    # Jeśli ostatni log wygenerowany jest starszy niż reset_delta, zresetuj licznik
-                    if now - summary.last_attempt > reset_delta:
-                        print("num resert")
-                        summary.attempts_count = total_attempts
-                    else:
-                        print("addind")
-                        summary.attempts_count += total_attempts
-                    #
-                    # summary.last_attempt = last_generated_time
-                    # summary.save()
-                    print(str(summary.last_attempt) + "___"+ str(last_generated_time))
-                    if summary.last_attempt < last_generated_time:
-                        print("new time")
-                        summary.last_attempt = last_generated_time
+                if summary == None:
+                    try:
+                        summary = FailedLoginSummary.objects.get(source_address=ip)
+                    except FailedLoginSummary.DoesNotExist:
+                        # Jeśli nie ma wpisu, tworzymy nowy
+                        if debug:
+                            print("new failed log")
+                        summary = FailedLoginSummary.objects.create(
+                            source_address=ip,
+                            last_attempt=last_generated_time,
+                            attempts_count=total_attempts
+                        )
+                        continue
+                if now - summary.last_attempt > reset_delta:
 
-                except FailedLoginSummary.DoesNotExist:
-                    # Jeśli nie ma wpisu, tworzymy nowy
-                    print("new failed log")
-                    FailedLoginSummary.objects.create(
-                        source_address=ip,
-                        last_attempt=last_generated_time,
-                        attempts_count=total_attempts
-                    )
+                    summary.attempts_count = total_attempts
+                else:
+
+                    summary.attempts_count += total_attempts
+
+
+                if summary.last_attempt < last_generated_time:
+
+                    summary.last_attempt = last_generated_time
+
+            summary.processed = False
+            summary.save()
+
+            summary: FailedLoginSummary = None
 
             # Zaznacz logi jako przetworzone (processed=True)
             for log in ip_logs:
                 log.processed = True
                 log.save(update_fields=['processed'])
-        # FailedLogins = FailedLoginSummary.objects.filter(
-        #     source_address__in=sus_ip_list
-        # )
+            print(f"[{self.name}] New brute-force attempts found and saved.")
 
-        # Sprawdzenie czy dany adres już widnieje w bazie
-            # w pętli for po logach dla danego adresu
-                # jeśli nie utwórz i zapisz w pętli for wszystkie próby ataków od czasu reset_attempts_time wstecz oraz czas
-                # ostatniego ataku
-
-                # jeśli isnieje sprawdz czy próba ostatniego logowania nie jest starsza niz aktualna godzina - reset_attempts_time
-                # jeśli tak wyzeruj last_attempt i zsumuj do attempts_count wartość repeat_count
-
-                # jeśli czas mieści się w przedziale czasu zsumuj do attempts_count wartość repeat_count
-
-        time.sleep(self.sleep_time * 5)
-        # if not logs.exists():
-        #     time.sleep(self.sleep_time)
-        #     return
-        #
-        # # Grupowanie logów po adresie źródłowym
-        # logs_by_ip = {}
-        # for log in logs:
-        #     logs_by_ip.setdefault(log.source_address, []).append(log)
-        #
-        # for ip, events in logs_by_ip.items():
-        #     # Suma prób brute-force dla tej iteracji
-        #     attempts = sum(event.repeat_count for event in events)
-        #
-        #     try:
-        #         summary = FailedLoginSummary.objects.get(source_address=ip)
-        #         time_diff = now - summary.last_attempt
-        #
-        #         if time_diff <= reset_time:
-        #             # Kontynuujemy zliczanie prób
-        #             summary.attempts_count += attempts
-        #         else:
-        #             # Resetujemy — próba zbyt stara
-        #             summary.attempts_count = attempts
-        #
-        #         summary.last_attempt = now
-        #         summary.save()
-        #
-        #     except FailedLoginSummary.DoesNotExist:
-        #         # Tworzymy pierwszy wpis dla IP
-        #         FailedLoginSummary.objects.create(
-        #             source_address=ip,
-        #             last_attempt=now,
-        #             attempts_count=attempts
-        #         )
-        #
-        #     # Oznaczamy ThreatLog jako przetworzony
-        #     ThreatLog.objects.filter(
-        #         id__in=[e.id for e in events]
-        #     ).update(processed=True)
+        time.sleep(self.sleep_time)
 
 ########################################################################################################################
 #########                                                                                                      #########
@@ -226,12 +401,14 @@ class LogAnalyzer(BaseWorker):
 ########################################################################################################################
 
 class LogFetcher(BaseWorker):
-    def __init__(self, ip:ipaddress.IPv4Address=None, port:int=None):
+    def __init__(self, ip:ipaddress.IPv4Address=None, port:int=None, allowed_ips=None):
         super().__init__(name="LogFetcher")
         self.ip = ip
         self.port = port
         self.UDPServer = None
         self.buffer = 4096
+        self.allowed_ips = allowed_ips
+        print(f" allowed ip {allowed_ips}")
 
     def update_data_and_restart(self, ip: ipaddress.IPv4Address | None = None,
                     port: int | None = None):
@@ -254,14 +431,6 @@ class LogFetcher(BaseWorker):
                 print(f"[{self.name}] Invalid port value: {port}")
                 return
 
-        # if self.UDPServer:
-        #     print(f"[{self.name}] Restarting UDP server...")
-        #     self.UDPServer.close()
-        #     self.UDPServer = None
-        #
-        # self.open_udp_server()
-
-
     def open_udp_server(self):
         if self.UDPServer:
             print(f"[{self.name}] UDPServer listening on {self.port}")
@@ -280,9 +449,13 @@ class LogFetcher(BaseWorker):
 
     def loop(self):
         raw_data, addr = self.UDPServer.recvfrom(self.buffer)
+        if self.allowed_ips != []:
+            if str(addr[0]) not in self.allowed_ips:
+                print(f"[{self.name}] Not allowed IP address: {addr}")
+                return
 
         if debug:
-            # print(f"[{self.name}] Received data from %s:%d" % (addr[0], addr[1]), end=" ")
+            print(f"[{self.name}] Received data from %s:%d" % (addr[0], addr[1]), end=" ")
             mess = raw_data.decode().strip()
             # print("Message: '" + mess + "'") # For debugging
         try:
@@ -291,13 +464,13 @@ class LogFetcher(BaseWorker):
                 try:
                     log = parse_raw_log(raw_log)
                     # print("log: " + str(log))
-
-                    try:
-                        log.save()
-                        # if debug:
-                            # print(f"[{self.name}] Log saved.")
-                    except Exception as e:
-                        print(f"[{self.name}] Failed to save log: {e}")
+                    if log:
+                        try:
+                            log.save()
+                            # if debug:
+                                # print(f"[{self.name}] Log saved.")
+                        except Exception as e:
+                            print(f"[{self.name}] Failed to save log: {e}")
 
                 except Exception as e:
                     print(f"[{self.name}] Failed to parse log: {e}")

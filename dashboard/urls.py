@@ -10,6 +10,9 @@ urlpatterns = [
     path('blacklist/', views.blacklist_page, name="blacklist"),
     path('whitelist/', views.whitelist_page, name="whitelist"),
     path('settings/', views.settings_page, name="settings"),
+    path('blocked/', views.blocked_view, name="blocked"),
+    path('gen_block_command/', views.gen_block_command, name="gen_block_command"),
+    path('gen_unblock_command/', views.gen_unblock_command, name="gen_unblock_command"),
 
 ]
 

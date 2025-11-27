@@ -1,25 +1,113 @@
 {% extends 'dashboard/base.html' %}
 
 {% block content %}
-<div class="row">
-    <div class="box row" style="text-align:center; padding:20px;">
-        {% if bot_active %}
+
+
+    {% if automated %}
+        <div class="box" style="text-align:center; padding:20px;">
             <h2 style="color:green;">Bot w trybie automatycznym</h2>
-            <form class="row" action="{% url 'power_off_worker' %}" method="post">
-                {% csrf_token %}
-                <button class="button" style="background:red; color:white; padding:10px 20px; font-size:16px;">
-                    Wyłącz bota
-                </button>
-            </form>
-        {% else %}
-            <h2 style="color:red;">Bot nie działa</h2>
-            <form class="row"  action="{% url 'power_on_worker' %}" method="post">
-                {% csrf_token %}
-                <button class="button" style="background:green; color:white; padding:10px 20px; font-size:16px; margin-left:10px;">
-                    Włącz tryb automatyczny
-                </button>
-            </form>
-        {% endif %}
-    </div>
-</div>
+            <h4>Decyzje są podejmowane za ciebie</h4>
+            <h5>Możesz zmienić tryb działania w ustawieniach</h5>
+        </div>
+    {% else %}
+        <div class="box">
+            <h2>Lista adresów które należy zablokować</h2>
+            <div class="row center">
+                {% if to_block_list %}
+                <h4>Zablokować wszystkie?</h4>
+                <form action="{% url 'dashboard:gen_block_command' %}" method="POST"
+                    onsubmit="return confirm('Na pewno chcesz zablokować wszystkie {{ el }}?');">
+
+                    {% csrf_token %}
+                    {% for el in to_block_list %}
+                        <input type="hidden" name="addresses" value="{{ el.address }}">
+                    {% endfor %}
+                    <button type="submit" class="logout_button">Zablokuj wszysztkie</button>
+                </form>
+                {% else %}
+                    <h4>Brak adresów do zablokowania</h4>
+                {% endif %}
+            </div>
+        </div>
+            {% if to_block_list %}
+                <div class="list">
+
+                <div class="listElement row box center">
+
+                    <form action="{% url 'dashboard:gen_block_command' %}" method="POST" class="list"
+                        onsubmit="return confirm('Na pewno chcesz zablokować zaznaczone?');">
+                        {% csrf_token %}
+
+                        {% for el in to_block_list %}
+                            <div class="box row center">
+                                <input type="checkbox" name="addresses" value="{{ el.address }}">
+                                <strong>{{ el }}</strong>
+                            </div>
+                        {% endfor %}
+                        <button type="submit" class="logout_button">Zablokuj zaznaczone</button>
+                    </form>
+                    </div>
+                </div>
+            {% endif %}
+
+
+
+
+
+
+{#        _________________________________________ do odblokowania --------------------------------------#}
+
+
+                <div class="box" style="margin-top: 40px;">
+                    <h2>Lista adresów które należy odblokować</h2>
+                    <div class="row center">
+
+                        {% if to_unblock_list %}
+
+                        <h4>Odblokować wszystkie?</h4>
+                        <form action="{% url 'dashboard:gen_unblock_command' %}" method="POST"
+                            onsubmit="return confirm('Na pewno chcesz odblokować wszystkie {{ el }}?');">
+
+                            {% csrf_token %}
+                            {% for el in to_unblock_list %}
+                                <input type="hidden" name="addresses" value="{{ el.address }}">
+                            {% endfor %}
+
+                            <button type="submit" class="logout_button">Odblokuj wszysztkie</button>
+                        </form>
+
+                        {% else %}
+
+                            <h4>Brak adresów do odblokowania</h4>
+
+                        {% endif %}
+
+                    </div>
+                </div>
+
+                {% if to_unblock_list %}
+                <div class="list">
+
+
+                <div class="listElement row box center">
+
+                    <form action="{% url 'dashboard:gen_unblock_command' %}" method="POST" class="list"
+                        onsubmit="return confirm('Na pewno chcesz zablokować zaznaczone?');">
+                        {% csrf_token %}
+
+                        {% for el in to_unblock_list %}
+                            <div class="box row center">
+                                <input type="checkbox" name="addresses" value="{{ el.address }}">
+                                <strong>{{ el }}</strong>
+                            </div>
+                        {% endfor %}
+                        <button type="submit" class="logout_button">Odblokuj zaznaczone</button>
+                    </form>
+                    </div>
+                </div>
+                    {% endif %}
+            </div>
+
+    {% endif %}
+
 {% endblock %}

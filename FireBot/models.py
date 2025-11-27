@@ -150,17 +150,71 @@ class FailedLoginSummary(models.Model):
     def __str__(self):
         return f"{self.source_address} | {self.attempts_count} attempts"
 
-''' Tabela do zablokowanych adresów musi mieć
-- adres na jaki blokada jest nałożona
-- czas rozpoczęcia blokady
-- dlugosc blokany (chyba numer)
-- czas zdjecia blokady
-- czy do odblokowania?
+class BlockedAddress(models.Model):
+    """
+    Model przechowujący informacje o blokadach nakładanych na adresy IP.
+    """
 
-Tabela 2 podejrzane adresy
-adres
-ostatni atak
-liczba atakow
+    address = models.GenericIPAddressField(
+        db_index=True,
+        help_text="Adres IP, na który została nałożona blokada"
+    )
 
-tabela logów dodać wpis czy był już przetwarzany
-'''
+    start_time = models.DateTimeField(
+        help_text="Data i czas rozpoczęcia blokady"
+    )
+
+    block_number = models.PositiveSmallIntegerField(
+        choices=[(1, "Blokada 1"), (2, "Blokada 2"), (3, "Blokada 3"), (4, "Blokada 4")],
+        help_text="Numer blokady (od 1 do 4)"
+    )
+
+    end_time = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text="Data zdjęcia blokady"
+    )
+
+    is_blocked = models.BooleanField(
+        default=True,
+        db_index=True,
+        help_text="Czy blokada jest obecnie aktywna"
+    )
+
+    requires_unblock: bool = models.BooleanField(
+        default=False,
+        help_text="Czy adres czeka na odblokowanie (np. przez automat lub admina)"
+    )
+
+    was_unblocked = models.BooleanField(
+        default=False,
+        help_text="Czy blokada została już zdjęta"
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="Czas dodania wpisu do bazy"
+    )
+
+    processed = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text="Czy wpis blokady został już przetworzony przez background worker"
+    )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["address", "is_blocked"]),
+            models.Index(fields=["block_number"]),
+            models.Index(fields=["processed"]),
+        ]
+        verbose_name = "Blocked Address"
+        verbose_name_plural = "Blocked Addresses"
+        ordering = ["-start_time"]
+
+    def __str__(self):
+        if self.block_number == 4:
+            block = "permanentna"
+        else:
+            block = self.block_number
+        return f"{self.address} | blokada {block} | aktywna={self.is_blocked} | do={self.end_time}"

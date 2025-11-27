@@ -3,13 +3,30 @@
 {% block content %}
 <div class="row" style="">
     <div class="box">
-        <p>Na tej stronie znajdują się adresy IP, które są na stałe zablokowane — bot nigdy ich automatycznie nie odblokuje.
-Odblokowanie adresu możliwe jest tylko ręcznie, poprzez wybranie go z listy.
-Możesz tu także na stałe zablokować nowe adresy IP.</p>
+        <p>
+            Na tej stronie możesz zarządzać adresami IP blokowanymi przez system.
+            Adresy znajdujące się na tej liście nie są automatycznie odblokowywane przez bota —
+            jedyną możliwością ich odblokowania jest wykonanie tego ręcznie.
+        </p>
+
+        <p>
+            Funkcje dostępne na stronie:
+        </p>
+        <ul style="all: unset;">
+            <li style="all: unset;"><strong>Przegląd i odblokowanie aktualnie zablokowanych adresów IP</strong> — możesz wybrać dowolny adres z listy i odblokować go ręcznie.</li>
+            <li style="all: unset;"><strong>Dodawanie adresów lub całych sieci do blacklisty</strong> — bot będzie ignorował takie adresy, aby umożliwić ich odblokowanie lub wykluczyć je z automatycznych działań.</li>
+            <li style="all: unset;"><strong>Usuwanie adresów z blacklisty</strong> — gdy adres IP nie powinien być już ignorowany, możesz go łatwo usunąć.</li>
+        </ul>
+
+        <p>
+            Aby dodać nowy adres IP lub sieć, skorzystaj z formularza po prawej stronie. Możesz także dodać opcjonalny komentarz opisujący powód blokady.
+        </p>
+
     </div>
 
     <div class="box">
-        <h2>Wpisz sieć IP do zablokowania</h2>
+        <h2>Dodaj adres do blacklist</h2>
+        <h4>Podając adres ip i maskę sieci</h4>
         <form method="POST" action="{% url 'add-address-to-list' 'blacklist' %}">
             {% csrf_token %}
             <div class="ipAdress">
@@ -23,7 +40,26 @@ Możesz tu także na stałe zablokować nowe adresy IP.</p>
 </div>
 
     <div class="box">
-        <h2>Aktualnie zablokowane adresy</h2>
+        {% if block_list == None %}
+            <h3>Brak aktualnie blokowanych adresów</h3>
+        {% elif block_list %}
+            <h2>Aktualnie blokowane adresy:</h2>
+            <div class="list">
+                {% for el in block_list %}
+
+                        <form action="{% url 'dashboard:gen_unblock_command' %}" method="POST" class="listElement row box center"
+                              onsubmit="return confirm('Na pewno chcesz odblokować {{ el.address }}?');">
+
+                            <input type="hidden" name="addresses" value="{{ el.address }}">
+                            <button type="submit" class="logout_button">Odblokuj</button>
+                            <p>{{ el }}</p>
+                            {% csrf_token %}
+
+                        </form>
+
+                {% endfor %}
+            </div>
+        {% endif %}
     </div>
 
 <div class="box">
@@ -36,24 +72,19 @@ Możesz tu także na stałe zablokować nowe adresy IP.</p>
 {#        <strong>Komentarz</strong>#}
 {#        </div>#}
         {% for el in blacklist %}
-
-        <div class="listElement row box">
-            <strong>{{ el.network }}</strong>
-
-            {% if el.comment %}
-            <p>{{ el.comment }}</p>
-            {% else %}
-            <p> Brak</p>
-            {% endif %}
-
             <form action="{% url 'delete_ip' 'blacklist' el.id %}" method="POST"
                 onsubmit="return confirm('Na pewno chcesz usunąć {{ el.network }}?');">
+                <div class="listElement row box center">
+                    <button type="submit" class="logout_button">Usuń</button>
+                    <strong>{{ el.network }}</strong>
 
-                {% csrf_token %}
-                <button type="submit" class="logout_button">Usuń</button>
+                    {% if el.comment %}
+                    <p>{{ el.comment }}</p>
+                    {% else %}
+                    <p> Brak</p>
+                    {% endif %}
+                    {% csrf_token %}
             </form>
-
-
         </div>
 
         {% endfor %}
