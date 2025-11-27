@@ -1,5 +1,7 @@
 import json
 
+from django.utils import timezone
+
 from FireBot.models import BlockedAddress
 
 
@@ -39,46 +41,75 @@ def gen_panos_securityrules_block(host: str, ip_list: list, vsys: str = "vsys1",
 
     # Generacja curl w formacie CMD z \ i +
     cmd_command = "curl -k -X POST \\\n"
-    cmd_command += "+  '" + url + "' \\\n"
-    cmd_command += "+  -H 'X-PAN-KEY: " + api_key + "' \\\n"
-    cmd_command += "+  -H 'Content-Type: application/json' \\\n"
-    cmd_command += "+  -d '" + payload_str + "'"
+    cmd_command += "  '" + url + "' \\\n"
+    cmd_command += "  -H 'X-PAN-KEY: " + api_key + "' \\\n"
+    # cmd_command += "  -H 'Content-Type: application/json' \\\n"
+    cmd_command += "  -d '" + payload_str + "'"
 
     return cmd_command
 
 
 def get_command_html(command):
-    json_command = json.dumps(command)
+    # Zamieniamy komendę na poprawnie escapowany string JS
+    escaped_command = json.dumps(str(command))
 
-    return f'''
-            <html>
-                <head>
-                    <title>Wygenerowana komenda</title>
-                    <style>
-                        body {{ font-family: monospace; padding: 20px; background: #f5f5f5; }}
-                        pre {{ background: #222; color: #0f0; padding: 15px; border-radius: 5px; overflow-x: auto; }}
-                        button {{ margin-top: 10px; padding: 5px 10px; margin-right: 10px; }}
-                    </style>
-                </head>
-                <body>
-                    <h3>Wygenerowana komenda:</h3>
-                    <pre id="commandBox">{command}</pre>
-                    <button onclick="copyCommand()">Kopiuj do schowka</button>
-                    <button onclick="goBack()">Powrót do dashboard</button>
+    return f"""
+<html>
+    <head>
+        <title>Wygenerowana komenda</title>
+        <style>
+            body {{ font-family: monospace; padding: 20px; background: #f5f5f5; }}
+            pre {{ background: #222; color: #0f0; padding: 15px; border-radius: 5px; overflow-x: auto; }}
+            button {{ margin-top: 10px; padding: 5px 10px; margin-right: 10px; }}
+        </style>
+    </head>
+    <body>
 
-                    <script>
-                        function copyCommand() {{
-                            const command = {json_command};
-                            navigator.clipboard.writeText(command);
-                        }}
+        <div style="display: flex; flex-direction: column">
+            <h3>Wygenerowana komenda:</h3>
+            <div id="apiSection">
+                <label>Wpisz klucz API:</label><br>
+                <input id="apiInput" type="text" placeholder="API key" style="width:300px; padding:5px;">
+                <button onclick="updateApiKey()">Zapisz klucz</button>
+            </div>
+        </div>
 
-                        function goBack() {{
-                            window.location.href = '/dashboard/mode/';
-                        }}
-                    </script>
-                </body>
-            </html>
-            '''
+        <pre id="commandBox">{command}</pre>
+        <button onclick="copyCommand()">Kopiuj do schowka</button>
+        <button onclick="goBack()">Powrót do dashboard</button>
+
+        <script>
+            // string, nie obiekt!
+            let originalCommand = {escaped_command};
+
+            function updateApiKey() {{
+                let apiKey = document.getElementById('apiInput').value;
+
+                if (!apiKey) {{
+                    alert("Podaj klucz API!");
+                    return;
+                }}
+
+                // Podstawiamy <YOUR-API-KEY> w stringu
+                let updated = originalCommand.replace(/<YOUR-API-KEY>/g, apiKey);
+
+                document.getElementById('commandBox').innerText = updated;
+            }}
+
+            function copyCommand() {{
+                const content = document.getElementById('commandBox').innerText;
+                navigator.clipboard.writeText(content);
+            }}
+
+            function goBack() {{
+                window.location.href = '/dashboard/mode/';
+            }}
+        </script>
+    </body>
+</html>
+"""
+
+
 
 
 
@@ -128,5 +159,6 @@ def db_mark_unblock_ip_addresses(ip_list: list):
         ob.is_blocked=False
         ob.requires_unblock=False
         ob.was_unblocked=True
-        ob.save(update_fields=["is_blocked", "requires_unblock", "was_unblocked"])
+        ob.end_time=timezone.now()
+        ob.save(update_fields=["is_blocked", "requires_unblock", "was_unblocked", "end_time"])
 
