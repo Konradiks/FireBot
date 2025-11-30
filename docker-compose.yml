@@ -1,0 +1,22 @@
+version: '3.9'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: FireBot
+    ports:
+      - "8000:8000"
+      - "514:514"
+    volumes:
+      - ./db.sqlite3:/app/db.sqlite3
+      - ./settings_docker.py:/app/FireBot/settings.py:ro
+    entrypoint: ["/app/entrypoint.sh"]
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      - SECRET_KEY=django-insecure-a8!$!uw(9_r%qunw(fe#_g&*n0_$!o56&kaghcruee@t!i(x)$
+      - DJANGO_DEBUG=0
+      - ALLOWED_HOSTS=*
+    restart: unless-stopped
