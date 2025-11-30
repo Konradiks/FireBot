@@ -3,24 +3,7 @@
 {% block content %}
 <div class="row" style="">
     <div class="box">
-        <p>
-            Na tej stronie możesz zarządzać adresami IP blokowanymi przez system.
-            Adresy znajdujące się na tej liście nie są automatycznie odblokowywane przez bota —
-            jedyną możliwością ich odblokowania jest wykonanie tego ręcznie.
-        </p>
-
-        <p>
-            Funkcje dostępne na stronie:
-        </p>
-        <ul style="all: unset;">
-            <li style="all: unset;"><strong>Przegląd i odblokowanie aktualnie zablokowanych adresów IP</strong> — możesz wybrać dowolny adres z listy i odblokować go ręcznie.</li>
-            <li style="all: unset;"><strong>Dodawanie adresów lub całych sieci do blacklisty</strong> — bot będzie ignorował takie adresy, aby umożliwić ich odblokowanie lub wykluczyć je z automatycznych działań.</li>
-            <li style="all: unset;"><strong>Usuwanie adresów z blacklisty</strong> — gdy adres IP nie powinien być już ignorowany, możesz go łatwo usunąć.</li>
-        </ul>
-
-        <p>
-            Aby dodać nowy adres IP lub sieć, skorzystaj z formularza po prawej stronie. Możesz także dodać opcjonalny komentarz opisujący powód blokady.
-        </p>
+        <p> Na tej stronie możesz dodać lub usunąć adres z czarnej listy. Oznacza to, że jeśli adres zostanie zablokowany, nie będzie później sugerowany do odblokowania. Operacje na czarnej liście są dostępne wyłącznie w tym widoku. Możesz również odblokować każdy aktualnie blokowany adres IP. </p>
 
     </div>
 
@@ -38,7 +21,7 @@
         </form>
     </div>
 </div>
-
+<div class="row">
     <div class="box">
         {% if block_list %}
             <h2>Aktualnie blokowane adresy:</h2>
@@ -94,6 +77,7 @@
     <h2>Lista jest pusta</h2>
 {% endif %}
 </div>
+    </div>
 
 
 

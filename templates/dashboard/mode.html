@@ -2,6 +2,11 @@
 
 {% block content %}
 
+    <div class="box">
+        <p> Na tej stronie, w trybie ręcznego wydawania komend, znajdują się dwie listy. </p> 
+        <p> Pierwsza lista zawiera adresy sugerowane przez system do zablokowania, zgodnie z wcześniej zdefiniowanymi ustawieniami. Możesz zablokować wszystkie adresy przyciskiem „Zablokuj wszystkie” lub zaznaczyć wybrane pozycje, aby zablokować je pojedynczo. Po naciśnięciu przycisku zostanie wygenerowana komenda umożliwiająca dodanie reguły blokady do firewalla. Komendę można wkleić do konsoli po wcześniejszym uzupełnieniu klucza API. </p> 
+        <p> Druga lista zawiera adresy przeznaczone do odblokowania, ponieważ czas ich blokady dobiegł końca. Komenda do odblokowania zostanie wygenerowana w taki sam sposób, jak w przypadku pierwszej listy. </p>
+    </div>
 
     {% if automated %}
         <div class="box" style="text-align:center; padding:20px;">
