@@ -13,6 +13,7 @@ from django.apps import apps
 from django.db.models import Sum
 from FireBot.models import ThreatLog
 from django.utils import timezone
+import datetime as _dt
 from datetime import timedelta
 from django.shortcuts import render
 
@@ -135,7 +136,15 @@ def settings_page(request):
             sleep_time = form.cleaned_data.get("bot_frequency")
             Settings.objects.all().delete()
             try:
+
                 form.save()
+                if form.cleaned_data.get("executor_automated") == True:
+                    messages.info(request, "Brak implementacji połączenia z API")
+                    s = Settings.objects.first()
+                    print(s)
+                    s.executor_automated = False
+                    s.save(update_fields=['executor_automated'])
+                    print(s.executor_automated)
                 messages.success(request, 'Settings saved.')
             except Exception as e:
                 messages.error(request, e)
@@ -166,13 +175,24 @@ def statistics_page(request):
         granularity = request.GET.get('granularity', 'hour')
 
         if end_date:
-            # parse date-only string to timezone-aware datetime at end of day
-            end_dt = timezone.make_aware(timezone.datetime.fromisoformat(end_date))
+            # jeśli przekazano tylko datę (YYYY-MM-DD), traktujemy ją jako koniec dnia
+            try:
+                d = _dt.date.fromisoformat(end_date)
+                end_dt = timezone.make_aware(_dt.datetime.combine(d, _dt.time.max))
+            except Exception:
+                # fallback: spróbuj sparsować jako pełne datetime
+                end_dt = timezone.make_aware(timezone.datetime.fromisoformat(end_date))
         else:
             end_dt = timezone.localtime()
 
         if start_date:
-            start_dt = timezone.make_aware(timezone.datetime.fromisoformat(start_date))
+            # jeśli przekazano tylko datę (YYYY-MM-DD), traktujemy ją jako początek dnia
+            try:
+                d = _dt.date.fromisoformat(start_date)
+                start_dt = timezone.make_aware(_dt.datetime.combine(d, _dt.time.min))
+            except Exception:
+                # fallback: spróbuj sparsować jako pełne datetime
+                start_dt = timezone.make_aware(timezone.datetime.fromisoformat(start_date))
         else:
             # default to 24 hours before end_dt
             start_dt = end_dt - timedelta(hours=24)
@@ -185,13 +205,55 @@ def statistics_page(request):
     qs = ThreatLog.objects.filter(generated_time__gte=start_dt, generated_time__lte=end_dt)
 
     # Time series aggregation
-    if granularity == 'day':
-        ts = qs.annotate(period=TruncDay('generated_time')).values('period').annotate(count=Sum('repeat_count')).order_by('period')
-    else:
-        ts = qs.annotate(period=TruncHour('generated_time')).values('period').annotate(count=Sum('repeat_count')).order_by('period')
+    # We aggregate in Python to allow custom bucket sizes:
+    # - when granularity == 'hour'  -> bucket size = 10 minutes
+    # - when granularity == 'day'   -> bucket size = 1 hour
+    logs = qs.values('generated_time', 'repeat_count').order_by('generated_time')
 
-    x_time = [t['period'].isoformat() for t in ts]
-    y_counts = [t['count'] for t in ts]
+    buckets = {}
+    tz = timezone.get_current_timezone()
+
+    if granularity == 'day':
+        # bucket to hours
+        def make_bucket(dt):
+            dt = dt.astimezone(tz)
+            return dt.replace(minute=0, second=0, microsecond=0)
+        step = timedelta(hours=1)
+    else:
+        # default: 'hour' -> bucket to 10-minute intervals
+        def make_bucket(dt):
+            dt = dt.astimezone(tz)
+            minute = (dt.minute // 10) * 10
+            return dt.replace(minute=minute, second=0, microsecond=0)
+        step = timedelta(minutes=10)
+
+    for row in logs:
+        gen = row['generated_time']
+        cnt = row.get('repeat_count') or 0
+        if gen is None:
+            continue
+        bucket = make_bucket(gen)
+        buckets[bucket] = buckets.get(bucket, 0) + cnt
+
+    # Build ordered time series covering full range (including empty buckets)
+    # Align start_dt to bucket boundary
+    if granularity == 'day':
+        start_aligned = start_dt.astimezone(tz).replace(minute=0, second=0, microsecond=0)
+    else:
+        sd = start_dt.astimezone(tz)
+        start_aligned = sd.replace(minute=(sd.minute // 10) * 10, second=0, microsecond=0)
+
+    end_aligned = end_dt.astimezone(tz)
+    # ensure inclusive end: step to cover the last bucket
+    # generate periods from start_aligned to end_aligned inclusive
+    periods = []
+    cur = start_aligned
+    while cur <= end_aligned:
+        periods.append(cur)
+        cur = cur + step
+
+    x_time = [p.isoformat() for p in periods]
+    y_counts = [buckets.get(p, 0) for p in periods]
 
     # Additional metrics
     total_attempts = int(sum(y_counts)) if y_counts else 0

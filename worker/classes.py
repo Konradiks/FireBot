@@ -10,7 +10,7 @@ from worker.functions import save_log, get_raw_log, parse_raw_log, is_ip_on_list
 
 worker_instance = None
 
-debug = True
+debug = False
 simulate = False
 
 
