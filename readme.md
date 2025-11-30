@@ -1,14 +1,16 @@
 # to do
 
-- Wypisanie komendy do wklejenia dla operatora
-- Konteneryzacja
 - sprawdzić od ilu nieudanych prób generowany jest log oraz czy nie dodawać tej liczby
-- poprawić opisy
 - weryfikacja w statystykach czy zakres od jest mniejszy niz do
-- generowanie reguł
+- ogarnać zapisywanie danych dla konteneru po zatrzymaniu, może obraz ubuntu?]
+- zweryfikować endpointy
 
 
 # Done
+- Wypisanie komendy do wklejenia dla operatora
+- Konteneryzacja
+- poprawić opisy
+- generowanie reguł
 - Config file - to do przemyślenia
 - testy czasu dostępu dla pobrania wartości z configu a z classy
 - zrobić setting 
@@ -28,4 +30,18 @@
 - Zbieranie statystyk
 - Wyświetlanie aktualnie zablokowanych adresów z godz ich odblokowania (czyli kiedy zostaną odblokowane)
 - Wyświetlanie statystyk
+
+# Tworzenie obrazu
+```shell
+sudo docker build -f Dockerfile -t firebot .  
+```
+# Uruchomienie 
+```shell
+sudo docker run --user root -p 514:514/udp -p 8000:8000 firebot
+```
+
+# Uruchomienie w tle
+```shell
+sudo docker run -d --user root -p 514:514/udp -p 8000:8000 firebot
+```
 
