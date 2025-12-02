@@ -20,7 +20,7 @@ COPY static/ static/
 COPY templates/ templates/
 COPY worker/ worker/
 
-# COPY entrypoint.sh entrypoint.sh
-# RUN chmod +x entrypoint.sh
+COPY entrypoint.sh entrypoint.sh
+RUN chmod +x entrypoint.sh
 
 # CMD ["./entrypoint.sh"]
