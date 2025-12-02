@@ -381,7 +381,8 @@ class LogAnalyzer(BaseWorker):
             for log in ip_logs:
                 log.processed = True
                 log.save(update_fields=['processed'])
-            print(f"[{self.name}] New brute-force attempts found and saved.")
+            if debug:
+                print(f"[{self.name}] New brute-force attempts found and saved.")
 
         time.sleep(self.sleep_time)
 
