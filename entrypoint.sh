@@ -9,8 +9,8 @@ python manage.py shell <<EOF
 
 # Tworzenie superusera, wpisz swoje dane tutaj
 # Hasło można zmienić w panelu admina po pierwszym zalogowaniu
-username = "student" 
-password = "studentpass"
+username = "admin" 
+password = "adminpass"
 
 
 from django.contrib.auth import get_user_model

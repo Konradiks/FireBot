@@ -106,6 +106,16 @@ docker compose up
 
 Przykład `docker-compose.yml` mapuje porty `8000` (UI) i `514/udp` (syslog) oraz montuje `db.sqlite3` i `settings_docker.py` do kontenera. W środowisku produkcyjnym rozważ użycie zewnętrznej bazy (Postgres) oraz bezpieczne przechowywanie sekretów (zmienne środowiskowe lub Secret Manager).
 
+Uwaga: przed uruchomieniem skontenerowanej aplikacji zaktualizuj domyślnego superużytkownika w `entrypoint.sh` (login i hasło):
+
+```sh
+# entrypoint.sh
+username = "admin"
+password = "adminpass"
+```
+
+Zmień wartości na własne poświadczenia lub wyłącz automatyczne tworzenie superusera zgodnie z potrzebami środowiska.
+
 ## Konfiguracja
 
 - Aplikacja czyta podstawowe ustawienia z Django settings.
