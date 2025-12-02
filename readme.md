@@ -144,13 +144,7 @@ Funkcja `send_random_threats()` pozwala generować ciąg losowych logów z podsi
 
 Projekt jest dostępny na warunkach licencji MIT — plik `LICENSE.txt` znajduje się w repozytorium.
 
-Jeśli publikujesz projekt na GitHubie, możesz dodać badge licencji na górze README, np.:
-
 ```
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.txt)
 ```
-
----
-
-Jeśli chcesz, mogę wygenerować też krótszą wersję README do wyświetlenia w GitHubie (skrót + badges) albo dodać przykładowy `docker-compose.yml` z konfiguracją Postgres i Redis.
 
