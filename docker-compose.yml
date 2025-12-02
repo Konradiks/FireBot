@@ -8,7 +8,7 @@ services:
     container_name: FireBot
     ports:
       - "8000:8000"
-      - "514:514"
+      - "514:514/udp"
     volumes:
       - ./db.sqlite3:/app/db.sqlite3
       - ./settings_docker.py:/app/FireBot/settings.py:ro
