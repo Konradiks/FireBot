@@ -120,6 +120,24 @@ var y = d3.scaleLinear().domain([0,d3.max(lineData,d=>d.value)]).range([height,0
 svg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
 svg.append("g").call(d3.axisLeft(y));
 
+// Etykiety osi
+svg.append("text")
+    .attr("x", (width) / 2)
+    .attr("y", height + margin.bottom - 6)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "16px")
+    .attr("fill", "#333")
+    .text("Czas");
+
+svg.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("x", - (height / 2))
+    .attr("y", -margin.left + 16)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "16px")
+    .attr("fill", "#333")
+    .text("Ilość ataków");
+
 // Linia
 var line = svg.append("path")
     .datum(lineData)
@@ -228,6 +246,35 @@ function renderBar(container, data, labelKey, valueKey) {
         .text(d=>d[labelKey]);
 
     g.append('g').attr('transform', `translate(0,${innerH})`).call(d3.axisBottom(x).ticks(4));
+
+    // Dodaj etykiety osi: x -> Ilość ataków, y -> etykieta zależna od typu wykresu
+    const yLabelMap = {
+        'source': 'Adres źródłowy',
+        'port': 'Port docelowy',
+        'rule': 'Reguła',
+        'country': 'Kraj',
+        'destination': 'Adres docelowy'
+    };
+    const yLabel = yLabelMap[labelKey] || labelKey;
+
+    // X axis label (centered under chart)
+    svg.append('text')
+        .attr('x', margin.left + innerW / 2)
+        .attr('y', h - 6)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '16px')
+        .attr('fill', '#333')
+        .text('Ilość wystąpień');
+
+    // Y axis label (rotated)
+    svg.append('text')
+        .attr('transform', 'rotate(-90)')
+        .attr('x', - (margin.top + innerH / 2))
+        .attr('y', 14)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '16px')
+        .attr('fill', '#333')
+        .text(yLabel);
 }
 
 renderBar('#bar-sources', topSources, 'source', 'count');
