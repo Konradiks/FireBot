@@ -18,9 +18,9 @@ from datetime import timedelta
 from django.shortcuts import render
 
 from .functions import (gen_panos_securityrules_block, get_command_html, db_mark_block_ip_addresses,
-                        db_mark_unblock_ip_addresses, gen_panos_securityrules_unblock)
+                        db_mark_unblock_ip_addresses, gen_panos_securityrules_unblock, get_commit_command)
 
-debug = True
+debug = False
 
 @login_required
 def dashboard_Main(request):
@@ -93,6 +93,8 @@ def gen_block_command(request):
                 print("Blokuję wszystkie:", selected_addresses)
             db_mark_block_ip_addresses(selected_addresses)
             command = gen_panos_securityrules_block(host=get_firewall_address(), ip_list=selected_addresses)
+            command += get_commit_command(host=get_firewall_address())
+            command += "\n" # auto wysłanie
 
             return HttpResponse(get_command_html(command))
 
@@ -110,6 +112,8 @@ def gen_unblock_command(request):
 
             db_mark_unblock_ip_addresses(selected_addresses)
             command = gen_panos_securityrules_unblock(host=get_firewall_address(), ip_list=selected_addresses)
+            command += get_commit_command(host=get_firewall_address())
+            command += "\n" # auto wysłanie
 
             return HttpResponse(get_command_html(command))
 

@@ -1,119 +1,61 @@
 import json
 
 from django.utils import timezone
-
+import html
 from FireBot.models import BlockedAddress
 
 
 def gen_panos_securityrules_block(host: str, ip_list: list, vsys: str = "vsys1", api_key: str="<YOUR-API-KEY>"):
     '''
-    Generate a single curl command that creates multiple deny rules in one request.
-    https://pan.dev/scm/api/config/ngfw/security/create-security-rules/
-    Args:
-        host: firewall IP/hostname
-        api_key: PAN-OS API key
-        ip_list: list of IPs to block
-        vsys: VSYS name (default: vsys1)
-
-    Returns:
-        str: curl command
+    Generate multiple curl commands (one per IP) that create deny rules.
+    Using the REST API endpoint:
+    POST /restapi/v11.0/Policies/SecurityRules
     '''
 
-    entries = []
+    full_cmd = ""
+
     for ip in ip_list:
         rule_name = f"FireBot-{ip}"
+
         entry = {
-            "@location": "vsys",
-            "@name": rule_name,
-            "@vsys": vsys,
-            "action": "deny",
-            "source": {"member": [ip]},
-            "destination": {"member": ["any"]},
-            "description": "Regula stworzona przez FireBot"
+            "entry": [
+                {
+                    "@name": rule_name,
+                    "@location": "vsys",
+                    "@vsys": vsys,
+                    "action": "deny",
+                    "application": {"member": ["any"]},
+                    "category": {"member": ["any"]},
+                    "destination": {"member": ["any"]},
+                    "from": {"member": ["any"]},
+                    "to": {"member": ["any"]},
+                    "service": {"member": ["any"]},
+                    "source": {"member": [ip]},
+                    "source-user": {"member": ["any"]},
+                    "source-hip": {"member": ["any"]},
+                    "destination-hip": {"member": ["any"]},
+                }
+            ]
         }
-        entries.append(entry)
 
-    payload = {"entry": entries}
+        payload_str = json.dumps(entry, indent=4)
 
-    payload_str = json.dumps(payload, indent=4)
+        # każdy POST musi mieć własne name=FireBot-ip
+        url = (
+            f"{host}/restapi/v11.0/Policies/SecurityRules"
+            f"?location=vsys&vsys={vsys}&name={rule_name}"
+        )
 
-    url = f"{host}/restapi/v11.0/Policies/SecurityRules?location=vsys&vsys={vsys}&name=FireBot-batch"
+        cmd = (
+            "curl -k -X POST \\\n"
+            f"  '{url}' \\\n"
+            f"  -H 'X-PAN-KEY: {api_key}' \\\n"
+            f"  -d '{payload_str}'\n\n"
+        )
 
+        full_cmd += cmd
 
-    cmd_command = "curl -k -X POST \\\n"
-    cmd_command += "  '" + url + "' \\\n"
-    cmd_command += "  -H 'X-PAN-KEY: " + api_key + "' \\\n"
-    # cmd_command += "  -H 'Content-Type: application/json' \\\n"
-    cmd_command += "  -d '" + payload_str + "'"
-
-    return cmd_command
-
-
-def get_command_html(command):
-
-    escaped_command = json.dumps(str(command))
-
-    return f"""
-<html>
-    <head>
-        <title>Wygenerowana komenda</title>
-        <style>
-            body {{ font-family: monospace; padding: 20px; background: #f5f5f5; }}
-            pre {{ background: #222; color: #0f0; padding: 15px; border-radius: 5px; overflow-x: auto; }}
-            button {{ margin-top: 10px; padding: 5px 10px; margin-right: 10px; }}
-        </style>
-    </head>
-    <body>
-
-        <div style="display: flex; flex-direction: column; width:800px;">
-            <h3>Wygenerowana komenda:</h3>
-            <div style="display: flex; align-items: end;">
-                <div id="apiSection">
-                    <label>Wpisz klucz API:</label><br>
-                    <input id="apiInput" type="text" placeholder="API key" style="width:300px; padding:5px;">
-                    <button onclick="updateApiKey()">Uzupełnij klucz</button>
-                </div>
-                <a href="https://docs.paloaltonetworks.com/pan-os/11-0/pan-os-panorama-api/get-started-with-the-pan-os-xml-api/get-your-api-key" target="_blank">Jak pozyskać klucz api</a>
-            </div>
-        </div>
-
-        <pre id="commandBox">{command}</pre>
-        <button onclick="copyCommand()">Kopiuj do schowka</button>
-        <button onclick="goBack()">Powrót do dashboard</button>
-
-        <script>
-            // string, nie obiekt!
-            let originalCommand = {escaped_command};
-
-            function updateApiKey() {{
-                let apiKey = document.getElementById('apiInput').value;
-
-                if (!apiKey) {{
-                    alert("Podaj klucz API!");
-                    return;
-                }}
-
-                // Podstawiamy <YOUR-API-KEY> w stringu
-                let updated = originalCommand.replace(/<YOUR-API-KEY>/g, apiKey);
-
-                document.getElementById('commandBox').innerText = updated;
-            }}
-
-            function copyCommand() {{
-                const content = document.getElementById('commandBox').innerText;
-                navigator.clipboard.writeText(content);
-            }}
-
-            function goBack() {{
-                window.location.href = '/dashboard/mode/';
-            }}
-        </script>
-    </body>
-</html>
-"""
-
-
-
+    return full_cmd
 
 
 # def gen_panos_securityrules_unblock(host: str, ip_list: list, vsys: str = "vsys1", api_key: str = "<YOUR-API-KEY>"):
@@ -145,7 +87,7 @@ def get_command_html(command):
 
 def gen_panos_securityrules_unblock(host: str, ip_list: list, vsys: str = "vsys1", api_key: str = "<YOUR-API-KEY>"):
     """
-    Generate curl commands that delete XML API rules for given IPs.
+    Generate curl DELETE commands that remove REST API security rules for given IPs.
     """
 
     cmd = ""
@@ -153,24 +95,26 @@ def gen_panos_securityrules_unblock(host: str, ip_list: list, vsys: str = "vsys1
     for ip in ip_list:
         rule_name = f"FireBot-{ip}"
 
-        xpath = (
-            f"/config/devices/entry/vsys/entry[@name='{vsys}']"
-            f"/rulebase/security/rules/entry[@name='{rule_name}']"
-        )
-
         cmd += (
-            "curl -k -X POST \\\n"
-            f"  '{host}/api/?key={api_key}&type=config&action=delete&xpath={xpath}'\n\n"
+            "curl -k -X DELETE \\\n"
+            f"  '{host}/restapi/v11.0/Policies/SecurityRules?location=vsys&vsys={vsys}&name={rule_name}' \\\n"
+            f"  -H 'X-PAN-KEY: {api_key}'\n\n"
         )
-
-    # Add COMMIT
-    cmd += (
-        "# COMMIT CHANGES\n"
-        "curl -k -X POST \\\n"
-        f"  '{host}/api/?key={api_key}&type=commit&cmd=<commit></commit>'\n"
-    )
 
     return cmd
+
+
+def get_commit_command(host: str, vsys: str = "vsys1", api_key: str="<YOUR-API-KEY>"):
+
+    cmd_xml = "<commit></commit>"
+    cmd_escaped = html.escape(cmd_xml)  # &lt;commit&gt;&lt;/commit&gt;
+
+    url = f"{host}/api/?type=commit&key={api_key}&cmd={cmd_escaped}"
+
+    cmd_command = "curl -k -X POST \\\n"
+    cmd_command += "  '" + url
+
+    return cmd_command
 
 
 def db_mark_block_ip_addresses(ip_list: list):
@@ -194,3 +138,81 @@ def db_mark_unblock_ip_addresses(ip_list: list):
         ob.end_time=timezone.now()
         ob.save(update_fields=["is_blocked", "requires_unblock", "was_unblocked", "end_time"])
 
+
+def get_command_html(command):
+
+    escaped_command = json.dumps(str(command))
+
+    return f"""
+<html>
+    <head>
+        <title>Wygenerowana komenda</title>
+        <style>
+            body {{ font-family: monospace; padding: 20px; background: #f5f5f5; }}
+
+            .scroll-box {{
+                background: #222;
+                color: #0f0;
+                padding: 15px;
+                border-radius: 5px;
+                width: 90vw;
+                max-height: 67vh; 
+                overflow: auto;      /* scroll vertical + horizontal */
+                white-space: pre;     /* zachowuje formatowanie */
+                margin-top: 20px;
+                margin-bottom: 10px;
+            }}
+
+            button {{ 
+                margin-top: 10px; 
+                padding: 5px 10px; 
+                margin-right: 10px; 
+            }}
+        </style>
+    </head>
+    <body>
+
+        <div style="display: flex; flex-direction: column; width:800px;">
+            <h3>Wygenerowana komenda:</h3>
+            <div style="display: flex; align-items: end;">
+                <div id="apiSection">
+                    <label>Wpisz klucz API:</label><br>
+                    <input id="apiInput" type="text" placeholder="API key" style="width:300px; padding:5px;">
+                    <button onclick="updateApiKey()">Uzupełnij klucz</button>
+                </div>
+                <a href="https://docs.paloaltonetworks.com/pan-os/11-0/pan-os-panorama-api/get-started-with-the-pan-os-xml-api/get-your-api-key" target="_blank">Jak pozyskać klucz api</a>
+            </div>
+        </div>
+
+        <div id="commandBox" class="scroll-box">{command}</div>
+
+        <button onclick="copyCommand()">Kopiuj do schowka</button>
+        <button onclick="goBack()">Powrót do dashboard</button>
+
+        <script>
+            let originalCommand = {escaped_command};
+
+            function updateApiKey() {{
+                let apiKey = document.getElementById('apiInput').value;
+
+                if (!apiKey) {{
+                    alert("Podaj klucz API!");
+                    return;
+                }}
+
+                let updated = originalCommand.replace(/<YOUR-API-KEY>/g, apiKey);
+                document.getElementById('commandBox').innerText = updated;
+            }}
+
+            function copyCommand() {{
+                const content = document.getElementById('commandBox').innerText;
+                navigator.clipboard.writeText(content);
+            }}
+
+            function goBack() {{
+                window.location.href = '/dashboard/mode/';
+            }}
+        </script>
+    </body>
+</html>
+"""
