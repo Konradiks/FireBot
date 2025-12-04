@@ -102,7 +102,7 @@ const lineData = xRaw.map((t,i)=>({date: new Date(t), value: yRaw[i]}));
 
 var container = document.getElementById("linechart");
 
-var margin={top:20,right:30,bottom:40,left:60},
+var margin={top:20,right:30,bottom:40,left:80},
     width = container.clientWidth-250,
     height=450;
 
@@ -117,15 +117,17 @@ var x = d3.scaleTime().domain(d3.extent(lineData,d=>d.date)).range([0,width]);
 var y = d3.scaleLinear().domain([0,d3.max(lineData,d=>d.value)]).range([height,0]);
 
 // Osie
-svg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
-svg.append("g").call(d3.axisLeft(y));
+const xAxisG = svg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
+xAxisG.selectAll("text").attr("font-size", "15px");
+const yAxisG = svg.append("g").call(d3.axisLeft(y));
+yAxisG.selectAll("text").attr("font-size", "15px");
 
 // Etykiety osi
 svg.append("text")
     .attr("x", (width) / 2)
-    .attr("y", height + margin.bottom - 6)
+    .attr("y", height + margin.bottom + 9 )
     .attr("text-anchor", "middle")
-    .attr("font-size", "16px")
+    .attr("font-size", "19px")
     .attr("fill", "#333")
     .text("Czas");
 
@@ -134,7 +136,7 @@ svg.append("text")
     .attr("x", - (height / 2))
     .attr("y", -margin.left + 16)
     .attr("text-anchor", "middle")
-    .attr("font-size", "16px")
+    .attr("font-size", "19px")
     .attr("fill", "#333")
     .text("Ilość ataków");
 
