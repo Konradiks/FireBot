@@ -82,7 +82,7 @@ class SettingsForm2(forms.ModelForm):
             "block_duration_1": "Format: HH:MM:SS lub D HH:MM:SS",
             "block_duration_2": "Format: HH:MM:SS lub D HH:MM:SS",
             "block_duration_3": "Format: HH:MM:SS lub D HH:MM:SS",
-            "block_period_reset_time": "Po tym czasie poziom blokady wraca do poziomu 1.",
+            "block_period_reset_time": "Po tym czasie poziom blokady wraca do poziomu 1. Format: HH:MM:SS lub D HH:MM:SS",
 
             "permanent_block": "Jeśli włączone – po 4. naruszeniu blokada jest stała.",
             "executor_automated": "Jeśli True – bot będzie sam wywoływać API.",
