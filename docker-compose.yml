@@ -17,6 +17,6 @@ services:
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
       - SECRET_KEY=django-insecure-a8!$!uw(9_r%qunw(fe#_g&*n0_$!o56&kaghcruee@t!i(x)$
-      - DJANGO_DEBUG=1chmo
+      - DJANGO_DEBUG=1
       - ALLOWED_HOSTS=*
     restart: unless-stopped
