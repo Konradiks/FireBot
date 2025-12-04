@@ -112,7 +112,7 @@ def get_commit_command(host: str, vsys: str = "vsys1", api_key: str="<YOUR-API-K
     url = f"{host}/api/?type=commit&key={api_key}&cmd={cmd_escaped}"
 
     cmd_command = "curl -k -X POST \\\n"
-    cmd_command += "  '" + url
+    cmd_command += "  '" + url +"'"
 
     return cmd_command
 
