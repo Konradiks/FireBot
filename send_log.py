@@ -124,7 +124,7 @@ def send_random_threats(
     return sent
 
 if __name__ == '__main__':
-    ok, msg, log = send_threat_log('101.156.5.101', 20, location="Test", syslog_server="192.168.1.100")
+    ok, msg, log = send_threat_log('8.8.8.1', 20, location="Test", syslog_server="192.168.1.100")
     print(msg)
     print(log)
     #send_random_threats(syslog_server="127.0.0.1", location="Test", subnet='172.21.37.0/26')

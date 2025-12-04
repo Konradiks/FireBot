@@ -167,7 +167,7 @@ class ActionExecutor(BaseWorker):
             return
 
         for entry in to_unblock:
-
+            print(entry)
             if is_ip_on_list(entry.address, "Blacklist"): # If true skip
                 if self.debug:
                     print(f"[{self.name}] Address {entry.address} on Blacklist → skipping")
@@ -215,6 +215,7 @@ class ActionExecutor(BaseWorker):
             processed=False,
 
         )
+
         if not threat_ip_list:
             time.sleep(self.sleep_time)
             return
@@ -227,12 +228,12 @@ class ActionExecutor(BaseWorker):
             if is_ip_on_list(threat.source_address, "Whitelist"):
                 if self.debug:
                     print(f"[{self.name}] Address {threat.source_address} on whitelist → skipping")
-                threat.processed = True
+                threat.processed = True # oznacza incydent jako przetworzony
                 threat.save(update_fields=["processed"])
                 continue
 
-            # Pobierz lub utwórz wpis blokady
-            threat_blockade, created = BlockedAddress.objects.get_or_create(
+            # Dla adresu który wywował incydent Pobierz lub utwórz wpis blokady
+            address_blockade, created = BlockedAddress.objects.get_or_create(
                 address=threat.source_address,
                 defaults={
                     "start_time": now,
@@ -246,25 +247,27 @@ class ActionExecutor(BaseWorker):
                 }
             )
 
-            if threat_blockade.was_unblocked != False or True != threat_blockade.requires_unblock:
+            if address_blockade.was_unblocked != False or True != address_blockade.requires_unblock:
                 pass
             else:
                 if debug:
                     print(f'[{self.name}] {threat} was not yet Blocked.')
-                threat_blockade.start_time = now
-                if threat_blockade.block_number == 1:
-                    threat_blockade.end_time = now + self.block_duration_1
-                if threat_blockade.block_number == 2:
-                    threat_blockade.end_time = now + self.block_duration_2
-                if threat_blockade.block_number == 3:
-                    threat_blockade.end_time = now + self.block_duration_3
 
-                threat_blockade.processed = True
-                threat_blockade.save(update_fields=["end_time", "start_time" ])
+                address_blockade.start_time = now
+                # przedłużenie czasu dlokady
+                if address_blockade.block_number == 1:
+                    address_blockade.end_time = now + self.block_duration_1
+                if address_blockade.block_number == 2:
+                    address_blockade.end_time = now + self.block_duration_2
+                if address_blockade.block_number == 3:
+                    address_blockade.end_time = now + self.block_duration_3
 
-            if not created and threat_blockade.was_unblocked:
+                # address_blockade.processed = True
+                address_blockade.save(update_fields=["end_time", "start_time" ])
+
+            if not created and address_blockade.was_unblocked:
                 # podbij poziom blokady
-                threat_blockade = self.increase_blockade(threat_blockade, now)
+                address_blockade = self.increase_blockade(address_blockade, now)
                 if debug:
                     print(f'{self.name} increased blockade for {threat.source_address} ')
 
@@ -273,7 +276,7 @@ class ActionExecutor(BaseWorker):
                 print(f"[{self.name}] Automatic API call → NOT IMPLEMENTED YET")
 
             # zapis blokady
-            threat_blockade.save()
+            address_blockade.save()
 
             # oznacz źródło jako przetworzone i zresetuj licznik
             threat.processed = True
