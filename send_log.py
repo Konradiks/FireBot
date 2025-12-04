@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 
 def send_threat_log(src_ip: str, count: int, now=datetime.now(), syslog_server: str = "192.168.1.102", syslog_port: int = 514,
-                    dst_ip: str = "156.17.134.8", device_name: str = "pwr-test-fw-1", thread: str = 'brute-force',
+                    dst_ip: str = "0.0.0.0", device_name: str = "pwr-test-fw-1", thread: str = 'brute-force',
                     location: str = "Poland") -> tuple[bool, str]:
     """Generuje i wysyła pojedynczy log THREAT przez UDP.
 
