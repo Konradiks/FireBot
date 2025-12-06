@@ -3,15 +3,15 @@ from datetime import timedelta
 
 class Settings(models.Model):
     bot_frequency = models.DurationField(
-        default=timedelta(minutes=2)  # zamiast "0:03:00"
+        default=timedelta(minutes=2)  
     )
 
     executor_frequency = models.DurationField(
-        default=timedelta(minutes=5)  # zamiast "0:03:00"
+        default=timedelta(minutes=5)  
     )
 
     unblock_frequency = models.DurationField(
-        default=timedelta(hours=24)  # zamiast "0:03:00"
+        default=timedelta(hours=24)  
     )
 
     failed_attempts_limit = models.IntegerField(
@@ -19,21 +19,21 @@ class Settings(models.Model):
     )
 
     reset_attempts_time = models.DurationField(
-        default=timedelta(days=1)  # zamiast "1:00:00"
+        default=timedelta(days=1)  
     )
 
     block_duration_1 = models.DurationField(
-        default=timedelta(days=3)  # zamiast "0:10:00"
+        default=timedelta(days=3)  
     )
     block_duration_2 = models.DurationField(
-        default=timedelta(days=7)  # zamiast "1:00:00"
+        default=timedelta(days=7)  
     )
     block_duration_3 = models.DurationField(
-        default=timedelta(days=14)  # zamiast "24:00:00"
+        default=timedelta(days=14)  
     )
 
     block_period_reset_time = models.DurationField(
-        default=timedelta(days=30)  # zamiast "24:00:00"
+        default=timedelta(days=30)  
     )
 
     permanent_block = models.BooleanField(

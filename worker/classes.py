@@ -108,12 +108,12 @@ class ActionExecutor(BaseWorker):
         """
         threat_blockade.start_time = now
 
-        # jeśli end_time jest None (nowy rekord), resetujemy poziom
+        # jeśli end_time jest None (nowy rekord), reset poziom
         if threat_blockade.end_time is None:
             threat_blockade.block_number = 1
             threat_blockade.end_time = now + self.block_duration_1
 
-        # jeśli ostatnia blokada nie jest przedawniona → podbij poziom
+        # jeśli ostatnia blokada nie jest przedawniona podbij poziom
         elif threat_blockade.end_time + self.block_period_reset_time > now:
 
 
@@ -131,18 +131,18 @@ class ActionExecutor(BaseWorker):
                 if self.block_4_permanently:
                     threat_blockade.block_number = 4
                     threat_blockade.requires_unblock = False
-                    # Możesz tu dodać wpis do blacklist
+
                 else:
                     threat_blockade.requires_unblock = True
                     threat_blockade.block_number = 3
                 threat_blockade.end_time = now + self.block_duration_3
 
-        # jeśli blokada się przedawniła → reset do poziomu 1
+        # jeśli blokada się przedawniła reset do poziomu 1
         else:
             threat_blockade.block_number = 1
             threat_blockade.end_time = now + self.block_duration_1
 
-        # ustaw flagi blokady
+        # flagi blokady
         threat_blockade.is_blocked = False
         threat_blockade.was_unblocked = False
         threat_blockade.processed = False
@@ -194,7 +194,7 @@ class ActionExecutor(BaseWorker):
         now = timezone.localtime()
 
         # ==========================================================
-        # 1. ODBLOKOWANIE ADRESÓW (raz na zdefiniowany okres)
+        # 1. ODBLOKOWANIE ADRESÓW 
         # ==========================================================
         if now >= self.next_unblock_time:
             self.unblock_expired(now)
@@ -209,7 +209,7 @@ class ActionExecutor(BaseWorker):
         if debug:
             print(f'[{self.name}] Checking if the number of new failed login attempts has exceeded the limits')
 
-        # pobierz adresy z nadmiarową liczbą prób
+        # adresy z nadmiarową liczbą prób
         threat_ip_list = FailedLoginSummary.objects.filter(
             attempts_count__gt=self.failed_attempts_limit,
             processed=False,
@@ -224,7 +224,7 @@ class ActionExecutor(BaseWorker):
             if debug:
                 print(f"[{self.name}] Analyzing Threat: {threat}")
 
-            # jeśli adres na whitelist → pomijamy
+            # jeśli adres na whitelist pomijamy
             if is_ip_on_list(threat.source_address, "Whitelist"):
                 if self.debug:
                     print(f"[{self.name}] Address {threat.source_address} on whitelist → skipping")
@@ -283,7 +283,6 @@ class ActionExecutor(BaseWorker):
             threat.attempts_count = 0
             threat.save(update_fields=["processed", "attempts_count"])
 
-            # pauza przed kolejną iteracją
         time.sleep(self.sleep_time)
 
 

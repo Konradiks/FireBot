@@ -79,6 +79,7 @@ def parse_raw_log(raw_log: list[str]):
             threat_category=raw_log[69],
             payload_protocol_id=raw_log[73],
         )
+
         return log
 
     except (IndexError, ValueError) as e:

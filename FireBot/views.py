@@ -53,29 +53,6 @@ def setup_view(request):
 
     return render(request, "setup.html")
 
-@login_required
-def power_off_worker(request):
-    # if worker_module.worker_instance:
-    #     worker_module.worker_instance.stop()
-    #     worker_module.worker_instance = None
-    #     print("Worker stopped")
-    # else:
-    #     print("No worker instance to stop")
-    return redirect('/dashboard/mode')
-
-@login_required
-def power_on_worker(request):
-    # if worker_module.worker_instance is None:
-    #     settings: Settings = get_settings()
-    #     if request.method == "POST":
-    #         worker_module.worker_instance = ActionExecutor(unblock_ip_interval=datetime.timedelta(seconds=30), failed_attempts_limit = settings.failed_attempts_limit)
-    #     else:
-    #         worker_module.worker_instance = ActionExecutor(unblock_ip_interval=datetime.timedelta(seconds=30), failed_attempts_limit = settings.failed_attempts_limit)
-    #     worker_module.worker_instance.start()
-    #     print("Worker started")
-    # else:
-    #     print("Worker already running")
-    return redirect('/dashboard/mode')
 
 @login_required
 def add_address_to_list(request, list_type):

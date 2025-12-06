@@ -54,9 +54,7 @@ def whitelist_page(request):
 def mode_page(request):
     if request.method == "POST":
         selected_addresses = request.POST.getlist('addresses')
-        # selected_addresses to lista adresów wybranych przez użytkownika
         print(selected_addresses)
-        # dalej możesz je np. zablokować w bazie
 
     settings = Settings.objects.first()
     automated = settings.executor_automated
@@ -208,10 +206,7 @@ def statistics_page(request):
 
     qs = ThreatLog.objects.filter(generated_time__gte=start_dt, generated_time__lte=end_dt)
 
-    # Time series aggregation
-    # We aggregate in Python to allow custom bucket sizes:
-    # - when granularity == 'hour'  -> bucket size = 10 minutes
-    # - when granularity == 'day'   -> bucket size = 1 hour
+
     logs = qs.values('generated_time', 'repeat_count').order_by('generated_time')
 
     buckets = {}
@@ -224,7 +219,7 @@ def statistics_page(request):
             return dt.replace(minute=0, second=0, microsecond=0)
         step = timedelta(hours=1)
     else:
-        # default: 'hour' -> bucket to 10-minute intervals
+        # default: 'hour' bucket to 10-minute intervals
         def make_bucket(dt):
             dt = dt.astimezone(tz)
             minute = (dt.minute // 10) * 10

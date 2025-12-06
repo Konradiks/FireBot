@@ -89,12 +89,10 @@ def send_random_threats(
             if iterations is not None and i >= iterations:
                 break
 
-            # losuj host w sieci (pomiń adres sieć i broadcast jeśli występują)
             if num_hosts <= 2:
-                # very small network, fallback to network address
                 src_ip = str(net.network_address)
             else:
-                # offset 1..num_addresses-2
+
                 offset = random.randint(1, num_hosts - 2)
                 src_ip = str(ipaddress.ip_address(int(net.network_address) + offset))
 
@@ -113,7 +111,6 @@ def send_random_threats(
 
             i += 1
 
-            # losowy sleep
             sleep_for = random.uniform(min_sleep, max_sleep)
             print(f"Oczekiwanie {sleep_for:.1f}s przed kolejnym logiem...")
             time.sleep(sleep_for)
@@ -124,7 +121,7 @@ def send_random_threats(
     return sent
 
 if __name__ == '__main__':
-    ok, msg, log = send_threat_log('8.8.8.1', 20, location="Test", syslog_server="192.168.1.100")
+    ok, msg, log = send_threat_log('8.8.8.12', 20, location="Test", syslog_server="192.168.1.100")
     print(msg)
     print(log)
     #send_random_threats(syslog_server="127.0.0.1", location="Test", subnet='172.21.37.0/26')

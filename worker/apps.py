@@ -38,15 +38,12 @@ class WorkerConfig(AppConfig):
                 # Jeśli nie ma rekordu, stworzymy domyślny
                 self.settings = Settings.objects.create()
         except (OperationalError, ObjectDoesNotExist):
-            # Tabela jeszcze nie istnieje (np. migrate nie było wykonane)
             self.settings = None
             return
 
         # if getattr(self, 'workers_started', False):
         #     return
         # self.workers_started = True
-
-        # Teraz możesz korzystać z 'settings', jeśli nie jest None
 
         self.log_analyzer = LogAnalyzer(sleep_time=self.settings.bot_frequency, reset_attempts_time=self.settings.reset_attempts_time)
         self.log_fetcher = LogFetcher(ip=self.settings.log_server_ip, port=self.settings.log_server_port, allowed_ips=self.settings.get_allowed_log_sources())
@@ -146,6 +143,6 @@ class WorkerConfig(AppConfig):
                 # Jeśli nie ma rekordu, stworzymy domyślny
                 self.settings = Settings.objects.create()
         except (OperationalError):
-            # Tabela jeszcze nie istnieje (np. migrate nie było wykonane)
+            # Tabela jeszcze nie istnieje
             self.settings = None
         return self.settings
