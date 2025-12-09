@@ -168,7 +168,7 @@ class ActionExecutor(BaseWorker):
 
         for entry in to_unblock:
             print(entry)
-            if is_ip_on_list(entry.address, "Blacklist") or entry.block_number <= 4: # If true skip
+            if is_ip_on_list(entry.address, "Blacklist") or entry.block_number >= 4: # If true skip
                 if self.debug:
                     print(f"[{self.name}] Address {entry.address} on Blacklist → skipping")
                 entry.processed = True
