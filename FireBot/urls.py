@@ -27,8 +27,6 @@ urlpatterns = [
     path('dashboard/', include('dashboard.urls')),
     path('logout/', views.logout_view, name='logout'),
     # path("setup/", views.setup_view, name="setup"),
-    path('power_off/', views.power_off_worker, name="power_off_worker"),
-    path('power_on/', views.power_on_worker, name="power_on_worker"),
     path('add-address-to-list/<str:list_type>/', views.add_address_to_list, name="add-address-to-list"),
     path('<str:list_type>/delete/<int:id>/', views.delete_ip, name='delete_ip'),
 ]
