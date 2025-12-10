@@ -69,7 +69,10 @@ pip install -r requirements.txt
 3. Uruchom migracje
 
 ```powershell
+python manage.py makemigrations FireBot
+python manage.py makemigrations dashboard
 python manage.py migrate
+python manage.py migrate dashboard
 python manage.py createsuperuser
 ```
 
@@ -92,7 +95,7 @@ docker compose build
 docker compose up -d
 ```
 
-Sprawdź logi kontenera:
+(opcjonalnie) Sprawdź logi kontenera:
 
 ```powershell
 docker compose logs -f web
