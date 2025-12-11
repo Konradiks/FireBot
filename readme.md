@@ -157,7 +157,5 @@ Funkcja `send_random_threats()` pozwala generować ciąg losowych logów z podsi
 
 Projekt jest dostępny na warunkach licencji MIT — plik `LICENSE.txt` znajduje się w repozytorium.
 
-```
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.txt)
-```
 
